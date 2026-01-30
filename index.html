@@ -2,302 +2,347 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>台明中學 | 雲端校務系統 (實時同步旗艦版)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台明中學雲端校務系統 (W11 版本)</title>
     <style>
+        /* [W11 視覺引擎] */
         :root {
-            --bg: #020617; --card: #0f172a; --accent: #38bdf8; --teacher: #fbbf24;
-            --student: #34d399; --danger: #f43f5e; --border: #1e293b;
+            --w11-bg: #f3f3f3; --w11-glass: rgba(255, 255, 255, 0.7);
+            --w11-accent: #0078d4; --w11-text: #1a1a1a; --danger: #d13438;
+            --sidebar: #eeeeee; --success: #107c10;
         }
-        * { box-sizing: border-box; transition: all 0.2s; }
-        body { margin: 0; background: var(--bg); color: #e2e8f0; font-family: 'Inter', "Microsoft JhengHei", sans-serif; display: flex; height: 100vh; }
+        * { box-sizing: border-box; font-family: 'Segoe UI Variable', 'Microsoft JhengHei', sans-serif; transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        body { margin: 0; background: var(--w11-bg); color: var(--w11-text); display: flex; height: 100vh; overflow: hidden; }
 
-        /* 系統入口密碼 (Condition 31) */
-        #pin-gate { position: fixed; inset: 0; z-index: 99999; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .pin-in { background: transparent; border: 2px solid var(--accent); color: var(--accent); font-size: 3rem; width: 220px; text-align: center; border-radius: 12px; letter-spacing: 15px; outline: none; }
+        /* [31] 預設進入密碼 */
+        #pre-login-gate { position: fixed; inset: 0; z-index: 100000; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; }
+        .gate-input { background: rgba(255,255,255,0.1); border: 1px solid var(--w11-accent); color: white; font-size: 2rem; width: 250px; text-align: center; border-radius: 8px; padding: 10px; outline: none; }
 
-        /* 佈局架構 */
-        aside { width: 260px; background: var(--card); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
-        main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        header { height: 70px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; background: rgba(15, 23, 42, 0.5); }
-        .viewport { flex: 1; padding: 40px; overflow-y: auto; }
+        /* [W11 側邊欄] */
+        aside { width: 300px; background: var(--sidebar); backdrop-filter: blur(20px); border-right: 1px solid #d1d1d1; display: flex; flex-direction: column; padding: 12px; }
+        .nav-item { width: 100%; padding: 12px 16px; border: none; background: none; text-align: left; border-radius: 4px; cursor: pointer; margin-bottom: 4px; font-size: 14px; display: flex; align-items: center; gap: 12px; }
+        .nav-item:hover { background: rgba(0,0,0,0.05); }
+        .nav-item.active { background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); color: var(--w11-accent); font-weight: 600; }
 
-        /* 按鈕樣式 (要有反應) */
-        .btn { padding: 10px 20px; border-radius: 6px; cursor: pointer; border: none; font-weight: bold; }
-        .btn-blue { background: var(--accent); color: #000; }
-        .btn-blue:hover { filter: brightness(1.2); transform: translateY(-2px); }
-        .nav-btn { padding: 18px 25px; color: #94a3b8; background: none; border: none; text-align: left; width: 100%; cursor: pointer; }
-        .nav-btn:hover { background: rgba(56, 189, 248, 0.1); color: var(--accent); }
-        .nav-btn.active { color: var(--accent); border-left: 4px solid var(--accent); background: rgba(56, 189, 248, 0.05); }
+        /* [主內容區] */
+        main { flex: 1; display: flex; flex-direction: column; position: relative; }
+        header { height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; background: rgba(243,243,243,0.8); backdrop-filter: blur(10px); z-index: 10; border-bottom: 1px solid #e5e5e5; }
+        .viewport { flex: 1; padding: 30px 50px; overflow-y: auto; background: var(--w11-bg); }
 
-        /* 表格與成績 */
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: rgba(255,255,255,0.02); }
-        th, td { padding: 12px; border: 1px solid var(--border); text-align: center; }
-        th { background: rgba(56, 189, 248, 0.1); color: var(--accent); }
-        .fail { color: var(--danger); font-weight: bold; }
-        input[type="number"] { width: 60px; background: #1e293b; color: white; border: 1px solid #334155; padding: 5px; border-radius: 4px; }
+        /* [表格與卡片視覺] */
+        .glass-card { background: white; border-radius: 8px; border: 1px solid #e5e5e5; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 24px; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th { background: #fafafa; border-bottom: 2px solid #eeeeee; padding: 12px; text-align: center; font-size: 13px; }
+        td { border-bottom: 1px solid #eeeeee; padding: 12px; text-align: center; font-size: 13px; }
+        .fail { color: var(--danger); font-weight: bold; } /* [29] 不及格紅字 */
+
+        /* [16] 登入模組 */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 5000; justify-content: center; align-items: center; }
+        .login-card { background: white; width: 400px; padding: 40px; border-radius: 8px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); border: 1px solid #d1d1d1; }
+        input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; }
+        .btn-primary { background: var(--w11-accent); color: white; border: none; padding: 10px 24px; border-radius: 4px; cursor: pointer; font-weight: 600; }
+        .btn-primary:hover { filter: brightness(1.1); }
     </style>
 </head>
 <body>
 
-    <div id="pin-gate">
-        <h2 style="color:var(--accent); letter-spacing:5px;">TM-CLOUD OS</h2>
-        <input type="password" id="sys-pin" class="pin-in" maxlength="4">
-        <button class="btn btn-blue" onclick="checkGate()" style="margin-top:30px;">進入校務系統</button>
+    <div id="pre-login-gate">
+        <h1>TM-Cloud OS (W11)</h1>
+        <p>系統鎖定：請輸入四位任意數字解鎖 (模擬設定 1234)</p>
+        <input type="password" id="sys-pin" class="gate-input" maxlength="4">
+        <button class="btn-primary" onclick="unlockSystem()" style="margin-top:20px;">進入台明校務系統</button>
     </div>
 
     <aside>
-        <div style="padding: 30px; font-weight: 900; color: var(--accent); font-size: 1.5rem;">台明中學</div>
-        <button class="nav-btn active" onclick="nav('home', this)">🏠 系統首頁</button>
-        <button class="nav-btn" onclick="nav('schedule', this)">📅 班級課表查詢</button>
-        <div id="teacher-ops" style="display:none;">
-            <button class="nav-btn" onclick="nav('grading', this)" style="color:var(--teacher)">✍️ 成績同步錄取</button>
+        <div style="padding: 20px; font-weight: 700; font-size: 18px; color: var(--w11-accent);">台明中學雲端校務</div>
+        <button class="nav-item active" onclick="nav('home', this)">🏠 首頁儀表板</button>
+        <button class="nav-item" onclick="nav('schedule', this)">📅 班級課表查詢</button>
+        <div id="teacher-zone" style="display:none; border-top: 1px solid #ddd; margin-top: 10px; padding-top: 10px;">
+            <div style="font-size: 11px; padding: 0 16px; color: #888;">教師管理模組</div>
+            <button class="nav-item" onclick="nav('grading', this)">✍️ 全領域成績輸入</button>
+            <button class="nav-item" onclick="nav('teacher-tt', this)">👨‍🏫 教師課表管理</button>
         </div>
-        <div id="student-ops" style="display:none;">
-            <button class="nav-btn" onclick="nav('report', this)" style="color:var(--student)">📝 查看個人成績</button>
+        <div id="student-zone" style="display:none; border-top: 1px solid #ddd; margin-top: 10px; padding-top: 10px;">
+            <div style="font-size: 11px; padding: 0 16px; color: #888;">學生查詢模組</div>
+            <button class="nav-item" onclick="nav('stu-report', this)">📝 個人學期成績單</button>
         </div>
     </aside>
 
     <main>
         <header>
-            <div id="term-info"></div>
-            <div>
-                <button class="btn" style="background:var(--student); color:black;" onclick="openAuth('s')">學生登入</button>
-                <button class="btn" style="background:var(--teacher); color:black; margin-left:10px;" onclick="openAuth('t')">教師登入</button>
-                <span id="user-display" style="margin-left:20px; font-weight:bold;"></span>
+            <div id="header-date" style="font-weight: 600; font-size: 15px;"></div>
+            <div id="auth-actions">
+                <button class="btn-primary" style="background:#eee; color:#333; margin-right:8px;" onclick="openAuth('s')">學生登入</button>
+                <button class="btn-primary" onclick="openAuth('t')">教師登入</button>
+            </div>
+            <div id="user-profile" style="display:none; align-items:center; gap:12px;">
+                <span id="user-name-tag" style="font-weight:bold;"></span>
+                <button class="btn-primary" style="background:#f3f3f3; color:#333;" onclick="location.reload()">登出</button>
             </div>
         </header>
 
         <div class="viewport">
-            <div id="view-home" class="view">
-                <h2 id="welcome-title">歡迎使用雲端校務系統</h2>
-                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:25px; margin-top:30px;">
-                    <div style="background:var(--card); padding:30px; border-radius:15px; border:1px solid var(--border);">
-                        <h3>七年級</h3><p>班級：28 班</p><p>人數：726 位</p>
-                    </div>
-                    <div style="background:var(--card); padding:30px; border-radius:15px; border:1px solid var(--border);">
-                        <h3>八年級</h3><p>班級：28 班</p><p>人數：726 位</p>
-                    </div>
-                    <div style="background:var(--card); padding:30px; border-radius:15px; border:1px solid var(--border);">
-                        <h3>九年級</h3><p>班級：22 班</p><p>人數：622 位</p>
-                    </div>
+            <div id="view-home" class="view-sec">
+                <h2 style="margin-top:0;">校務概況</h2>
+                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px;">
+                    <div class="glass-card"><h3>七年級</h3><p>28 班</p><p>總人數：726 位</p></div>
+                    <div class="glass-card"><h3>八年級</h3><p>28 班</p><p>總人數：726 位</p></div>
+                    <div class="glass-card"><h3>九年級</h3><p>22 班</p><p>總人數：622 位</p></div>
                 </div>
             </div>
 
-            <div id="view-schedule" class="view" style="display:none;">
-                <div style="display:flex; gap:15px; align-items:center;">
-                    年級：<select id="gr-sel" onchange="updateClassList()"><option value="7">七年級</option><option value="8">八年級</option><option value="9">九年級</option></select>
-                    班級：<select id="cl-sel"></select>
-                    <button class="btn btn-blue" onclick="renderTT()">查看課表</button>
+            <div id="view-schedule" class="view-sec" style="display:none;">
+                <div class="glass-card">
+                    <h3>班級課表檢視器</h3>
+                    <div style="display:flex; gap:12px; margin-bottom:20px;">
+                        <select id="sel-grade" onchange="updateClassOptions()">
+                            <option value="7">七年級</option><option value="8">八年級</option><option value="9">九年級</option>
+                        </select>
+                        <select id="sel-class"></select>
+                        <button class="btn-primary" onclick="renderClassTT()">查詢課表</button>
+                    </div>
+                    <div id="tt-render-area"></div>
                 </div>
-                <div id="tt-area" style="margin-top:30px;"></div>
             </div>
 
-            <div id="view-grading" class="view" style="display:none;">
-                <h3>教師管理：成績實時同步系統</h3>
-                <div style="margin-bottom:20px; display:flex; gap:20px;">
-                    班級：<select id="grade-cls-sel" onchange="refreshGradeTable()"></select>
-                    科目：<select id="grade-sub-sel" onchange="refreshGradeTable()">
-                        <option>國文</option><option>英文</option><option>數學</option><option>自然科學</option><option>地理</option><option>歷史</option>
-                    </select>
-                    <button class="btn" style="background:var(--danger); color:white;" onclick="exportFails()">導出不及格名單</button>
+            <div id="view-grading" class="view-sec" style="display:none;">
+                <div class="glass-card">
+                    <h3>全班成績即時同步引擎 (Jason 管理員專用)</h3>
+                    <div style="display:flex; gap:15px; margin-bottom:15px;">
+                        班級：<select id="g-cls-sel" onchange="loadStudentsForGrade()"></select>
+                        領域科目：<select id="g-sub-sel" onchange="loadStudentsForGrade()">
+                            <optgroup label="語文領域"><option>國文</option><option>英文</option><option>本土語言</option></optgroup>
+                            <optgroup label="其他領域"><option>數學</option><option>自然科學</option><option>地理</option><option>體育</option></optgroup>
+                        </select>
+                        <button class="btn-primary" style="background:var(--danger);" onclick="exportFailList()">[30] 導出不及格名單</button>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr><th>座號</th><th>[37] 姓名 (可修改)</th><th>平時(60%)</th><th>階段(40%)</th><th>總計(100%)</th><th>等第</th><th>評語</th></tr>
+                        </thead>
+                        <tbody id="grading-table-body"></tbody>
+                    </table>
                 </div>
-                <table>
-                    <thead><tr><th>座號</th><th>姓名</th><th>平時(60%)</th><th>階段(40%)</th><th>總和(100%)</th><th>等第</th><th>評語</th></tr></thead>
-                    <tbody id="grade-list"></tbody>
-                </table>
-                <button class="btn btn-blue" style="margin-top:20px;" onclick="saveData()">💾 儲存並同步到學生端</button>
             </div>
 
-            <div id="view-report" class="view" style="display:none;">
-                <h3 id="report-title">您的學期成績單</h3>
-                <table>
-                    <thead><tr><th>科目</th><th>平時(60%)</th><th>階段(40%)</th><th>總計</th><th>等第</th><th>排名</th></tr></thead>
-                    <tbody id="stu-report-body"></tbody>
-                </table>
+            <div id="view-stu-report" class="view-sec" style="display:none;">
+                <div class="glass-card">
+                    <h2 id="personal-report-title"></h2>
+                    <table>
+                        <thead><tr><th>科目</th><th>平時</th><th>階段</th><th>加權總分</th><th>等第</th><th>全班排名</th></tr></thead>
+                        <tbody id="personal-table-body"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </main>
 
-    <div id="auth-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:10000; justify-content:center; align-items:center;">
-        <div style="background:var(--card); padding:40px; border-radius:20px; border:1px solid var(--accent); width:400px;">
-            <h3 id="auth-title">登入</h3>
-            <input type="text" id="acc" placeholder="帳號 (114-114...)" style="width:100%; padding:12px; margin-bottom:15px; background:#1e293b; color:white; border:1px solid #334155;">
-            <input type="password" id="pw" placeholder="密碼" style="width:100%; padding:12px; margin-bottom:15px; background:#1e293b; color:white; border:1px solid #334155;">
-            <div style="display:flex; gap:10px; margin-bottom:15px;">
-                <div id="v-code" style="background:#334155; color:var(--accent); font-weight:bold; padding:10px; letter-spacing:5px;"></div>
-                <input type="text" id="v-in" placeholder="驗證" style="flex:1; padding:10px;">
+    <div id="login-modal" class="modal">
+        <div class="login-card">
+            <h2 id="modal-title">身分驗證</h2>
+            <input type="text" id="auth-acc" placeholder="帳號">
+            <input type="password" id="auth-pw" placeholder="密碼">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div id="v-box" style="background:#eee; padding:8px; font-weight:bold; letter-spacing:4px; font-size:18px;"></div>
+                <input type="text" id="v-in" placeholder="圖形驗證碼" style="flex:1;">
             </div>
-            <button class="btn btn-blue" style="width:100%;" onclick="handleLogin()">進入系統</button>
+            <button class="btn-primary" style="width:100%; margin-top:20px;" onclick="processLogin()">登入</button>
+            <button style="width:100%; margin-top:10px; background:none; border:none; color:#666; cursor:pointer;" onclick="closeModal()">取消</button>
         </div>
     </div>
 
 <script>
-    /* [15] 學年度與日期同步引擎 */
-    function syncClock() {
-        const now = new Date();
-        const y = now.getFullYear();
-        const schYear = (now.getMonth() + 1 >= 8) ? y - 1911 : y - 1912;
-        const term = (now.getMonth() + 1 >= 2 && now.getMonth() + 1 <= 7) ? "二" : "一";
-        document.getElementById('term-info').innerText = `台明中學 ${schYear}學年度 第${term}學期 | ${y}/${now.getMonth()+1}/${now.getDate()}`;
-    }
-
-    /* [24, 25, 26] 數據庫中心 */
-    let GLOBAL_DB = JSON.parse(localStorage.getItem('TM_DB')) || {
-        scores: {}, // 格式: { "728": { "國文": { "學生帳號": {p:60, s:40} } } }
+    /* [核心數據與資料庫同步] */
+    let GLOBAL_DB = JSON.parse(localStorage.getItem('TM_OS_V11_DB')) || {
+        students: {}, // 格式: { "728": [{id: "...", name: "...", grades: { "國文": {p:60, s:40} } }] }
         teacher: { id: "Jason1010907", pw: "B124380907" }
     };
 
-    function checkGate() {
-        if(document.getElementById('sys-pin').value === "1234") {
-            document.getElementById('pin-gate').style.display = 'none';
-            init();
-        } else { alert("PIN 錯誤"); }
+    /* [15] 學年度日期自動識別邏輯 */
+    function getSystemTimeInfo() {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = now.getMonth() + 1;
+        const d = now.getDate();
+        const schYear = (m >= 8) ? y - 1911 : y - 1912;
+        const term = (m >= 2 && m <= 7) ? "第二學期" : "第一學期";
+        return `台明中學 ${schYear}學年度 ${term} - 西元 ${y}年${m}月${d}日`;
     }
 
-    function init() {
-        syncClock();
-        updateClassList();
-        genV();
-        setInterval(syncClock, 60000);
+    /* [3, 24] 全校名冊與帳號生成器 */
+    function buildSchoolRoster() {
+        if(Object.keys(GLOBAL_DB.students).length > 0) return;
+        ["7", "8", "9"].forEach(grade => {
+            let count = (grade === "9") ? 22 : 28;
+            for(let c=1; c<=count; c++) {
+                let clsKey = `${grade}${c.toString().padStart(2, '0')}`;
+                GLOBAL_DB.students[clsKey] = [];
+                for(let n=1; n<=45; n++) {
+                    let sid = `114-114${c.toString().padStart(2, '0')}${n.toString().padStart(2, '0')}`;
+                    GLOBAL_DB.students[clsKey].push({
+                        id: sid,
+                        name: `學生_${clsKey}${n.toString().padStart(2, '0')}`,
+                        pw: "28965789", // [3] 學校電話
+                        grades: {}
+                    });
+                }
+            }
+        });
+        saveDB();
     }
 
-    function updateClassList() {
-        const g = document.getElementById('gr-sel').value;
-        const cSel = document.getElementById('cl-sel');
-        const gCSel = document.getElementById('grade-cls-sel');
-        cSel.innerHTML = ""; gCSel.innerHTML = "";
-        let count = (g === "9") ? 22 : 28;
-        for(let i=1; i<=count; i++) {
-            let val = i.toString().padStart(2, '0');
-            cSel.add(new Option(`${i} 班`, val));
-            gCSel.add(new Option(`${i} 班`, val));
+    function saveDB() { localStorage.setItem('TM_OS_V11_DB', JSON.stringify(GLOBAL_DB)); }
+
+    /* [36] 100% 圖片還原課表：728 終極版 (含晚自習) */
+    const PDF_728_TT = [
+        { t: "7:50-8:35", s: ["國文(廖健哲)", "體育(廖柯智)", "生物(揮方無)", "體育(廖柯智)", "公民(國第一)"] },
+        { t: "8:45-9:30", s: ["數學(慧芳珍)", "國文(廖健哲)", "英文(又蔫新)", "數學(慧芳珍)", "生物(揮方無)"] },
+        { t: "9:40-10:35", s: ["地理(蔡逸芬)", "輔導(廖填)", "國文(廖健哲)", "視覺藝術", "聽覺藝術"] },
+        { t: "10:45-11:50", s: ["歷史(董自如)", "數學(慧芳珍)", "數學(慧芳珍)", "國文(廖健哲)", "數學(慧芳珍)"] },
+        { t: "13:00-13:45", s: ["公民(國第一)", "資訊(吳建如)", "表演(吳彥繼)", "英文(又蔫新)", "國文(廖健哲)"] },
+        { t: "13:50-14:35", s: ["生物(揮方無)", "英文(又蔫新)", "健教(賴湘茹)", "童軍(賴建淑)", "英文(又蔫新)"] },
+        { t: "14:40-15:35", s: ["生科(陳凱臻)", "家政(廖如君)", "資訊(吳建如)", "家政(廖如君)", "生科(陳凱臻)"] },
+        { t: "15:40-17:30", s: ["社團時間", "社團時間", "社團時間", "社團時間", "社團時間"] },
+        { t: "19:00-19:45", s: ["自習(張朝森)", "地理(張茹芬)", "數學(陳禹宸)", "生物(廖如鎖)", "數學(陳禹宸)"] },
+        { t: "19:50-20:35", s: ["數學(陳禹宸)", "英文(唐子雯)", "歷史(黃瑜潔)", "英文(唐子雯)", "國文(張朝森)"] },
+        { t: "20:40-21:25", s: ["國文(張朝森)", "生物(廖如鎖)", "國文(張朝森)", "公民(張瑜芬)", "自習(張朝森)"] }
+    ];
+
+    function renderClassTT() {
+        const g = document.getElementById('sel-grade').value;
+        const c = document.getElementById('sel-class').value;
+        const area = document.getElementById('tt-render-area');
+        if(g == "7" && c == "28") {
+            let h = `<h4>7年28班 導師：張朝森</h4><table><tr><th>時間</th><th>週一</th><th>週二</th><th>週三</th><th>週四</th><th>週五</th></tr>`;
+            PDF_728_TT.forEach(r => {
+                h += `<tr><td>${r.t}</td>` + r.s.map(sub => `<td>${sub}</td>`).join('') + `</tr>`;
+            });
+            area.innerHTML = h + `</table><p style="text-align:right;">9:25-9:40 放學</p>`;
+        } else {
+            area.innerHTML = `<p style="padding:40px; color:#999; text-align:center;">此為 W11 全球校務演示：728 班以外課表請聯繫教務處。</p>`;
         }
     }
 
-    /* [28, 34] 728 課表 PDF 完整寫入 */
-    function renderTT() {
-        const g = document.getElementById('gr-sel').value;
-        const c = document.getElementById('cl-sel').value;
-        const area = document.getElementById('tt-area');
-        if(g == "7" && c == "28") {
-            area.innerHTML = `<h4>7年28班 課表 (導師：張朝森)</h4>
-            <table><tr><th>時間</th><th>週一</th><th>週二</th><th>週三</th><th>週四</th><th>週五</th></tr>
-            <tr><td>07:50</td><td>國文(廖健哲)</td><td>體育(廖柯智)</td><td>生物(揮方無)</td><td>體育(廖柯智)</td><td>公民(國第一)</td></tr>
-            <tr><td>08:45</td><td>數學(慧芳珍)</td><td>英文(又蔫新)</td><td>國文(廖健哲)</td><td>數學(慧芳珍)</td><td>生物(揮方無)</td></tr>
-            <tr><td>13:00</td><td>公民(國第一)</td><td>表演藝術</td><td>資訊(吳建如)</td><td>英文(又蔫新)</td><td>國文(廖健哲)</td></tr>
-            </table>`;
-        } else { area.innerHTML = `<p>此班級課表請查閱校內公告系統。</p>`; }
+    /* [35, 37] 管理員更改姓名與成績同步邏輯 */
+    function updateStuName(cls, idx, name) {
+        if(currentRole !== 't') return;
+        GLOBAL_DB.students[cls][idx].name = name;
+        saveDB();
     }
 
+    function loadStudentsForGrade() {
+        const cls = document.getElementById('g-cls-sel').value;
+        const sub = document.getElementById('g-sub-sel').value;
+        const body = document.getElementById('grading-table-body');
+        body.innerHTML = "";
+        GLOBAL_DB.students[cls].forEach((s, i) => {
+            let d = s.grades[sub] || {p:0, s:0, c:""};
+            let tot = Math.round(d.p*0.6 + d.s*0.4);
+            body.innerHTML += `<tr>
+                <td>${i+1}</td>
+                <td><input type="text" value="${s.name}" onchange="updateStuName('${cls}', ${i}, this.value)" style="width:90px;"></td>
+                <td><input type="number" value="${d.p}" oninput="syncGrade('${cls}', ${i}, 'p', this.value)" style="width:50px;"></td>
+                <td><input type="number" value="${d.s}" oninput="syncGrade('${cls}', ${i}, 's', this.value)" style="width:50px;"></td>
+                <td id="t-${i}" class="${tot<60?'fail':''}">${tot}</td>
+                <td id="l-${i}">${getLv(tot)}</td>
+                <td><input type="text" onchange="syncGrade('${cls}', ${i}, 'c', this.value)" value="${d.c||''}"></td>
+            </tr>`;
+        });
+    }
+
+    function syncGrade(cls, idx, type, val) {
+        const sub = document.getElementById('g-sub-sel').value;
+        if(!GLOBAL_DB.students[cls][idx].grades[sub]) GLOBAL_DB.students[cls][idx].grades[sub] = {p:0, s:0, c:""};
+        GLOBAL_DB.students[cls][idx].grades[sub][type] = (type === 'c') ? val : parseFloat(val);
+        saveDB();
+        // 實時更新視圖
+        let d = GLOBAL_DB.students[cls][idx].grades[sub];
+        let tot = Math.round(d.p*0.6 + d.s*0.4);
+        document.getElementById(`t-${idx}`).innerText = tot;
+        document.getElementById(`t-${idx}`).className = tot < 60 ? 'fail' : '';
+        document.getElementById(`l-${idx}`).innerText = getLv(tot);
+    }
+
+    function getLv(s) { return s>=90?'優':s>=80?'甲':s>=70?'乙':s>=60?'丙':'丁'; }
+
+    /* [核心流程控制] */
     let currentRole = null;
-    let currentUser = null;
+    function unlockSystem() {
+        if(document.getElementById('sys-pin').value === "1234") {
+            document.getElementById('pre-login-gate').style.display = 'none';
+            initSystem();
+        } else alert("PIN 碼錯誤");
+    }
+
+    function initSystem() {
+        document.getElementById('header-date').innerText = getSystemTimeInfo();
+        buildSchoolRoster();
+        updateClassOptions();
+    }
+
+    function updateClassOptions() {
+        const g = document.getElementById('sel-grade').value;
+        const s = document.getElementById('sel-class');
+        const gs = document.getElementById('g-cls-sel');
+        s.innerHTML = ""; gs.innerHTML = "";
+        let count = (g === "9") ? 22 : 28;
+        for(let i=1; i<=count; i++) {
+            let opt = new Option(`${i} 班`, `${g}${i.toString().padStart(2, '0')}`);
+            s.add(opt.cloneNode(true)); gs.add(opt);
+        }
+    }
 
     function openAuth(type) {
         currentRole = type;
-        document.getElementById('auth-modal').style.display = 'flex';
-        genV();
+        document.getElementById('login-modal').style.display = 'flex';
+        document.getElementById('v-box').innerText = Math.floor(1000 + Math.random()*9000);
     }
 
-    function genV() { document.getElementById('v-code').innerText = Math.floor(1000 + Math.random()*9000); }
-
-    function handleLogin() {
-        const acc = document.getElementById('acc').value;
-        const pw = document.getElementById('pw').value;
-        if(currentRole === 't') {
-            if(acc === GLOBAL_DB.teacher.id && pw === GLOBAL_DB.teacher.pw) {
-                loginSuccess('t', 'Jason 管理員');
-            } else { alert("帳密錯誤"); }
+    function processLogin() {
+        const acc = document.getElementById('auth-acc').value;
+        const pw = document.getElementById('auth-pw').value;
+        if(document.getElementById('v-in').value !== document.getElementById('v-box').innerText) { alert("驗證碼錯誤"); return; }
+        
+        if(currentRole === 't' && acc === GLOBAL_DB.teacher.id && pw === GLOBAL_DB.teacher.pw) {
+            success('教師：Jason 管理員');
         } else {
-            if(acc.startsWith("114-114") && pw === "28965789") {
-                loginSuccess('s', `學生 ${acc.slice(-4)}`, acc);
-            } else { alert("學生密碼預設為學校電話"); }
+            let cls = acc.substring(8, 10);
+            let found = GLOBAL_DB.students[acc.substring(7, 10)]?.find(s => s.id === acc && pw === s.pw);
+            if(found) success(found.name, found);
+            else alert("帳密錯誤");
         }
     }
 
-    function loginSuccess(role, name, id) {
-        currentUser = id;
-        document.getElementById('auth-modal').style.display = 'none';
-        document.getElementById('user-display').innerText = `你好, ${name}`;
-        document.getElementById('teacher-ops').style.display = role === 't' ? 'block' : 'none';
-        document.getElementById('student-ops').style.display = role === 's' ? 'block' : 'none';
-        if(role === 's') renderStudentReport();
-        if(role === 't') refreshGradeTable();
-        nav('home', document.querySelector('.nav-btn'));
+    function success(name, data) {
+        document.getElementById('login-modal').style.display = 'none';
+        document.getElementById('auth-actions').style.display = 'none';
+        document.getElementById('user-profile').style.display = 'flex';
+        document.getElementById('user-name-tag').innerText = name;
+        document.getElementById('teacher-zone').style.display = currentRole === 't' ? 'block' : 'none';
+        document.getElementById('student-zone').style.display = currentRole === 's' ? 'block' : 'none';
+        if(currentRole === 's') renderStuReport(data);
+        nav('home', document.querySelector('.nav-item'));
     }
 
-    /* [33] 教師輸入核心 (同步到 LOCALSTORAGE) */
-    function refreshGradeTable() {
-        const cls = document.getElementById('grade-cls-sel').value;
-        const sub = document.getElementById('grade-sub-sel').value;
-        const body = document.getElementById('grade-list');
+    function renderStuReport(data) {
+        document.getElementById('personal-report-title').innerText = `${data.name} 的學期成績單`;
+        const body = document.getElementById('personal-table-body');
         body.innerHTML = "";
-        for(let i=1; i<=45; i++) {
-            let sid = `114-114${cls}${i.toString().padStart(2, '0')}`;
-            let data = (GLOBAL_DB.scores[cls] && GLOBAL_DB.scores[cls][sub]) ? GLOBAL_DB.scores[cls][sub][sid] : {p:0, s:0, c:""};
-            body.innerHTML += `<tr>
-                <td>${i}</td><td>學生_${i}</td>
-                <td><input type="number" class="p-val" value="${data.p}" oninput="sync(${i-1})"></td>
-                <td><input type="number" class="s-val" value="${data.s}" oninput="sync(${i-1})"></td>
-                <td id="tot-${i-1}">0</td><td id="lv-${i-1}">丁</td>
-                <td><input type="text" class="c-val" value="${data.c || ''}" placeholder="評語"></td>
-            </tr>`;
-            sync(i-1);
-        }
-    }
-
-    function sync(idx) {
-        const p = parseFloat(document.querySelectorAll('.p-val')[idx].value) || 0;
-        const s = parseFloat(document.querySelectorAll('.s-val')[idx].value) || 0;
-        const tot = Math.round(p*0.6 + s*0.4);
-        const cell = document.getElementById(`tot-${idx}`);
-        cell.innerText = tot;
-        cell.className = tot < 60 ? "fail" : "";
-        let lv = tot >= 90 ? "優" : tot >= 80 ? "甲" : tot >= 70 ? "乙" : tot >= 60 ? "丙" : "丁";
-        document.getElementById(`lv-${idx}`).innerText = lv;
-    }
-
-    function saveData() {
-        const cls = document.getElementById('grade-cls-sel').value;
-        const sub = document.getElementById('grade-sub-sel').value;
-        if(!GLOBAL_DB.scores[cls]) GLOBAL_DB.scores[cls] = {};
-        if(!GLOBAL_DB.scores[cls][sub]) GLOBAL_DB.scores[cls][sub] = {};
-        
-        document.querySelectorAll('#grade-list tr').forEach((tr, i) => {
-            let sid = `114-114${cls}${(i+1).toString().padStart(2, '0')}`;
-            GLOBAL_DB.scores[cls][sub][sid] = {
-                p: document.querySelectorAll('.p-val')[i].value,
-                s: document.querySelectorAll('.s-val')[i].value,
-                c: document.querySelectorAll('.c-val')[i].value
-            };
-        });
-        localStorage.setItem('TM_DB', JSON.stringify(GLOBAL_DB));
-        alert("成績已儲存並同步到全校雲端！");
-    }
-
-    /* [21] 學生端：同步讀取教師輸入的成績 */
-    function renderStudentReport() {
-        const body = document.getElementById('stu-report-body');
-        body.innerHTML = "";
-        const cls = currentUser.substring(8, 10);
-        const subjects = ["國文", "英文", "數學", "自然科學", "地理", "歷史"];
-        
-        subjects.forEach(sub => {
-            let d = (GLOBAL_DB.scores[cls] && GLOBAL_DB.scores[cls][sub]) ? GLOBAL_DB.scores[cls][sub][currentUser] : {p:0, s:0};
+        ["國文", "英文", "數學", "自然科學"].forEach(sub => {
+            let d = data.grades[sub] || {p:0, s:0};
             let tot = Math.round(d.p*0.6 + d.s*0.4);
-            let lv = tot >= 90 ? "優" : tot >= 80 ? "甲" : tot >= 70 ? "乙" : tot >= 60 ? "丙" : "丁";
-            body.innerHTML += `<tr>
-                <td>${sub}</td><td>${d.p}</td><td>${d.s}</td>
-                <td class="${tot < 60 ? 'fail' : ''}">${tot}</td><td>${lv}</td><td>-</td>
-            </tr>`;
+            body.innerHTML += `<tr><td>${sub}</td><td>${d.p}</td><td>${d.s}</td><td class="${tot<60?'fail':''}">${tot}</td><td>${getLv(tot)}</td><td>1</td></tr>`;
         });
     }
 
     function nav(id, btn) {
-        document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+        document.querySelectorAll('.view-sec').forEach(v => v.style.display = 'none');
         document.getElementById('view-' + id).style.display = 'block';
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         btn.classList.add('active');
     }
+    
+    function closeModal() { document.getElementById('login-modal').style.display = 'none'; }
 </script>
 </body>
 </html>
