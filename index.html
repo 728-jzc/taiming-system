@@ -289,3 +289,55 @@
 </script>
 </body>
 </html>
+
+/* [27, 28, 34, 36] 雲端課表渲染引擎 */
+function renderCloudTimetable() {
+    const grade = document.getElementById('sel-g').value;
+    const clazz = document.getElementById('sel-c').value;
+    const displayArea = document.getElementById('tt-box');
+
+    // 判斷是否為已數位化的 728 班級
+    if (grade === "7" && clazz === "28") {
+        let html = `
+            <div class="cloud-header">
+                <h4>七年二十八班 導師：張朝森老師 (雲端同步中...)</h4>
+            </div>
+            <table>
+                <thead>
+                    <tr><th>節次 / 時間</th><th>星期一</th><th>星期二</th><th>星期三</th><th>星期四</th><th>星期五</th></tr>
+                </thead>
+                <tbody>
+                    ${generateRows(TT_728_DATA)}
+                </tbody>
+            </table>
+            <div class="cloud-footer">
+                <p>⚠️ 下課時間：${getBreakTimes()}</p>
+                <p>📍 放學時間：9:25~9:40</p>
+            </div>
+        `;
+        displayArea.innerHTML = html;
+        displayArea.classList.add('fade-in'); // W11 動效
+    } else {
+        displayArea.innerHTML = `
+            <div class="status-msg">
+                <p>此為 W11 全球校務演示：僅 728 班課表已上傳數位雲端版。</p>
+            </div>
+        `;
+    }
+}
+
+// 從圖片錄入的雲端資料庫
+const TT_728_DATA = [
+    { period: "1", time: "07:50-08:35", sub: ["國文(廖健哲)", "體育(廖柯智)", "生物(揮方無)", "體育(廖柯智)", "公民(國第一)"] },
+    { period: "2", time: "08:45-09:30", sub: ["數學(慧芳珍)", "國文(廖健哲)", "英文(又蔫新)", "數學(慧芳珍)", "生物(揮方無)"] },
+    { period: "3", time: "09:40-10:35", sub: ["地理(蔡逸芬)", "輔導(廖填)", "國文(廖健哲)", "視覺藝術", "聽覺藝術"] },
+    { period: "4", time: "10:45-11:50", sub: ["歷史(董自如)", "數學(慧芳珍)", "數學(慧芳珍)", "國文(廖健哲)", "數學(慧芳珍)"] },
+    { period: "午休", time: "11:50-12:50", sub: ["午休(吃飯)", "午休(吃飯)", "午休(吃飯)", "午休(吃飯)", "午休(吃飯)"] },
+    { period: "5", time: "13:00-13:45", sub: ["公民(國第一)", "資訊(吳建如)", "表演(吳彥繼)", "英文(又蔫新)", "國文(廖健哲)"] },
+    { period: "6", time: "13:50-14:35", sub: ["生物(揮方無)", "英文(又蔫新)", "健教(賴湘茹)", "童軍(賴建淑)", "英文(又蔫新)"] },
+    { period: "7", time: "14:40-15:35", sub: ["生科(陳凱臻)", "家政(廖如君)", "資訊(吳建如)", "家政(廖如君)", "生科(陳凱臻)"] },
+    { period: "8-9", time: "15:40-17:30", sub: ["社團時間", "社團時間", "社團時間", "社團時間", "社團時間"] },
+    { period: "10", time: "19:00-19:45", sub: ["自習(張朝森)", "地理(張茹芬)", "數學(陳禹宸)", "生物(廖如鎖)", "數學(陳禹宸)"] },
+    { period: "11", time: "19:50-20:35", sub: ["數學(陳禹宸)", "英文(唐子雯)", "歷史(黃瑜潔)", "英文(唐子雯)", "國文(張朝森)"] },
+    { period: "12", time: "20:40-21:25", sub: ["國文(張朝森)", "生物(廖如鎖)", "國文(張朝森)", "公民(張瑜芬)", "自習(張朝森)"] }
+];
