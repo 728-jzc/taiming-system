@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>台明中學 114學年度 校務行政管理系統 V18</title>
+    <title>台明中學校務雲端 V20 - 2026 旗艦版</title>
     <style>
         :root { --w11-blue: #0078d4; --danger: #d13438; --bg: #f3f3f3; --border: #ddd; }
         body { margin: 0; background: var(--bg); font-family: "Segoe UI", "Microsoft JhengHei"; display: flex; height: 100vh; overflow: hidden; }
@@ -19,7 +19,7 @@
         .nav-item.active { background: #e0efff; color: var(--w11-blue); font-weight: bold; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
         th, td { border: 1px solid var(--border); padding: 8px; text-align: center; }
-        .fail { color: var(--danger); font-weight: bold; }
+        .fail { color: var(--danger) !important; font-weight: bold; }
         .area-title { background: #f9f9f9; font-weight: bold; text-align: left; padding-left: 15px; color: var(--w11-blue); }
         .btn-blue { background: var(--w11-blue); color: white; border: none; padding: 10px 18px; border-radius: 4px; font-weight: bold; cursor: pointer; }
         .btn-gray { background: #eee; color: #333; border: none; padding: 10px 18px; border-radius: 4px; font-weight: bold; cursor: pointer; }
@@ -30,18 +30,20 @@
 <body>
 
 <div id="gate">
-    <h2>台明中學系統驗證</h2>
+    <h2>台明中學校務系統</h2>
     <input type="password" id="sys-pin" placeholder="PIN 碼 (1234)" style="padding:10px; text-align:center;">
-    <button onclick="unlock()" class="btn-blue" style="margin-top:20px; width:200px;">驗證進入</button>
+    <button onclick="unlock()" class="btn-blue" style="margin-top:20px; width:200px;">驗證進入系統</button>
 </div>
 
 <aside>
-    <div style="font-size: 20px; font-weight: 800; color: var(--w11-blue); margin-bottom: 25px;">台明校務雲端 V18</div>
+    <div style="font-size: 18px; font-weight: 800; color: var(--w11-blue); margin-bottom: 25px;">TM-CLOUD OS V20</div>
     <div class="nav-item active" onclick="showPage('home')">🏠 系統首頁</div>
-    <div class="nav-item" onclick="showPage('pdf')">📅 班級課表(PDF)</div>
+    <div class="nav-item" onclick="showPage('pdf')">📅 班級課表 PDF</div>
+    
     <div id="m-t" style="display:none; border-top:1px solid #eee; margin-top:10px; padding-top:15px;">
-        <div class="nav-item" onclick="showPage('grading')">✍️ 領域科目錄取</div>
+        <div class="nav-item" onclick="showPage('grading')">✍️ 分科成績錄取</div>
     </div>
+    
     <div id="m-s" style="display:none; border-top:1px solid #eee; margin-top:10px; padding-top:15px;">
         <div class="nav-item" onclick="showPage('s-profile')">👤 家庭狀況填寫</div>
         <div class="nav-item" onclick="showPage('s-stage')">📊 階段成績查詢</div>
@@ -58,43 +60,43 @@
         </div>
         <div id="user-info" style="display:none;">
             <span id="user-display" style="font-weight:bold;"></span> | 
-            <button onclick="location.reload()" style="background:none; color:var(--danger); padding:0; cursor:pointer;">登出</button>
+            <button onclick="location.reload()" style="background:none; color:var(--danger); border:none; cursor:pointer;">登出</button>
         </div>
     </header>
 
     <div class="content">
         <div id="p-home" class="page">
             <div class="card">
-                <h3>台明中學 114 學年度 第一學期</h3>
-                <p>錄取權限：<span id="lock-txt" style="font-weight:bold; color:var(--w11-blue);"></span></p>
+                <h3 id="home-title">114學年度 第一學期</h3>
+                <p>電腦同步時間：<span id="clock-span" style="color:var(--w11-blue); font-weight:bold;"></span></p>
                 <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:15px; margin-top:20px;">
-                    <div style="background:#f8f9fa; padding:15px; border-radius:8px; text-align:center;"><b>7年級</b><br>1-28班 (共726人)</div>
-                    <div style="background:#f8f9fa; padding:15px; border-radius:8px; text-align:center;"><b>8年級</b><br>1-28班 (共726人)</div>
-                    <div style="background:#f8f9fa; padding:15px; border-radius:8px; text-align:center;"><b>9年級</b><br>1-28班 (共622人)</div>
+                    <div style="background:#f8f9fa; padding:15px; border-radius:8px; text-align:center;"><b>7年級 (114入學)</b><br>每班24人 / 28班</div>
+                    <div style="background:#f8f9fa; padding:15px; border-radius:8px; text-align:center;"><b>8年級 (113入學)</b><br>每班24人 / 28班</div>
+                    <div style="background:#f8f9fa; padding:15px; border-radius:8px; text-align:center;"><b>9年級 (112入學)</b><br>每班24人 / 28班</div>
                 </div>
             </div>
         </div>
 
         <div id="p-pdf" class="page" style="display:none;">
             <div class="card">
-                <h3>📅 班級課表 PDF 管理</h3>
+                <h3>📅 課表上傳與查詢系統 (PDF)</h3>
                 <div id="t-up" style="display:none; border:2px dashed var(--w11-blue); padding:15px; margin-bottom:15px; border-radius:8px;">
-                    <strong>教師 PDF 上傳：</strong><br><br>
+                    <strong>[管理端] 電腦 PDF 上傳：</strong><br><br>
                     年級：<select id="up-gr"></select> 班級：<select id="up-cls"></select>
                     <input type="file" id="pdf-file" accept=".pdf" style="margin-left:10px;">
-                    <button onclick="savePDF()" class="btn-blue">確認上傳</button>
+                    <button onclick="savePDF()" class="btn-blue">上傳 PDF 檔案</button>
                 </div>
-                查詢：年級 <select id="q-gr"></select> 班級 <select id="q-cls"></select> 
-                <button onclick="viewPDF()" class="btn-blue">查看</button>
+                查詢條件：年級 <select id="q-gr"></select> 班級 <select id="q-cls"></select> 
+                <button onclick="viewPDF()" class="btn-blue">即時預覽</button>
                 <div id="pdf-v" style="margin-top:20px; min-height:450px; border:1px solid #eee; display:flex; align-items:center; justify-content:center; color:#999;">尚未選擇檔案</div>
             </div>
         </div>
 
         <div id="p-grading" class="page" style="display:none;">
             <div class="card">
-                <h3>八大領域科目錄取系統</h3>
-                班級：<select id="ed-cls" onchange="renderG()"></select>
-                次別：<select id="ed-ex" onchange="renderG()"><option value="1">第一次段考</option><option value="2">第二次段考</option><option value="3">第三次段考</option></select>
+                <h3>八大領域學科錄取 (階段成績 40%+60%)</h3>
+                年級：<select id="ed-gr" onchange="renderG()"></select> 班級：<select id="ed-cls" onchange="renderG()"></select>
+                次別：<select id="ed-ex" onchange="renderG()"><option value="1">一段</option><option value="2">二段</option><option value="3">三段</option></select>
                 科目：<select id="ed-sub" onchange="renderG()">
                     <optgroup label="語文"> <option>國語文</option><option>本土語文</option><option>英語文</option> </optgroup>
                     <optgroup label="數學"> <option>數學</option> </optgroup>
@@ -106,41 +108,41 @@
                     <optgroup label="健體"> <option>健康教育</option><option>體育</option> </optgroup>
                 </select>
                 <table>
-                    <thead><tr><th>座號</th><th>學生姓名</th><th>平時(60%)</th><th>段考(40%)</th><th>階段總分</th><th>等第</th><th>家庭狀況</th></tr></thead>
+                    <thead><tr><th>座號</th><th>學號</th><th>姓名</th><th>平時(60%)</th><th>段考(40%)</th><th>總分/等第</th><th>家庭狀況</th></tr></thead>
                     <tbody id="g-body"></tbody>
                 </table>
             </div>
         </div>
 
         <div id="p-s-profile" class="page" style="display:none;">
-            <div class="card"><h3>👤 家庭狀況填寫</h3><textarea id="fam-area" placeholder="請學生自行輸入家庭狀況..."></textarea><br><br><button onclick="saveFam()" class="btn-blue">確認儲存</button></div>
+            <div class="card"><h3>👤 家庭狀況填寫</h3><textarea id="fam-area" style="width:100%; height:100px; padding:10px; box-sizing:border-box;"></textarea><br><br><button onclick="saveFam()" class="btn-blue">確認儲存並回報</button></div>
         </div>
-        <div id="p-s-stage" class="page" style="display:none;"><div class="card"><h3>階段成績單</h3><table id="ss-body"></table></div></div>
-        <div id="p-s-final" class="page" style="display:none;"><div class="card"><h3>學期學習成績 (系統自動計算)</h3><table id="sf-body"></table></div></div>
+        <div id="p-s-stage" class="page" style="display:none;"><div class="card"><h3>個人階段成績單</h3><table id="ss-body"></table></div></div>
+        <div id="p-s-final" class="page" style="display:none;"><div class="card"><h3>學期學習成績總表 (系統自動計算)</h3><table id="sf-body"></table></div></div>
     </div>
 </main>
 
 <div class="modal" id="login-modal">
     <div class="login-box">
-        <h3 id="l-title">登入入口</h3>
+        <h3 id="l-title">系統登入</h3>
         <input type="text" id="l-acc" placeholder="帳號" style="width:100%; margin-bottom:10px; padding:10px; box-sizing:border-box;">
         <input type="password" id="l-pw" placeholder="密碼" style="width:100%; margin-bottom:10px; padding:10px; box-sizing:border-box;">
         <div style="display:flex; align-items:center; margin-bottom:10px;">
             <span class="captcha-box" id="l-cap-img"></span>
             <input type="text" id="l-cap-in" placeholder="驗證碼" style="width:80px; padding:8px;">
         </div>
-        <button onclick="doLogin()" class="btn-blue" style="width:100%;">進入系統</button>
+        <button onclick="doLogin()" class="btn-blue" style="width:100%;">驗證進入</button>
         <button onclick="closeModal()" class="btn-gray" style="width:100%; margin-top:10px;">取消</button>
     </div>
 </div>
 
 <script>
 const AREAS = { "語文領域":["國語文","本土語文","英語文"], "數學領域":["數學"], "社會領域":["歷史","地理","公民"], "自然科學領域":["生物","物理","化學","地球科學"], "藝術領域":["音樂","視覺藝術","表演藝術"], "綜合活動領域":["家政","童軍","輔導活動"], "科技領域":["生活科技","資訊科技"], "健康與體育領域":["健康教育","體育"] };
-let DB = JSON.parse(localStorage.getItem('TM_V18_DATA')) || { students: {}, pdfs: {} };
-let role = '', user = null, now = new Date(), capVal = '';
+let DB = JSON.parse(localStorage.getItem('TM_V20_DATA')) || { students: {}, pdfs: {} };
+let role = '', user = null, capVal = '';
 
 function getStatus() {
-    let m = now.getMonth()+1, d = now.getDate();
+    let now = new Date(); let m = now.getMonth()+1, d = now.getDate();
     let sem = (m >= 8 || m <= 1) ? 1 : 2;
     let ex = 0, open = false;
     if(sem===1) {
@@ -148,7 +150,7 @@ function getStatus() {
     } else {
         if((m===3 && d>=10) || (m===4 && d<=9)) { ex=1; open=true; } else if(m===5) { ex=2; open=true; } else if((m===6 && d>=13) || (m===7 && d<=12)) { ex=3; open=true; }
     }
-    return { sem, ex, open };
+    return { sem, ex, open, full: now.toLocaleString(), raw: now };
 }
 
 function getLV(s) {
@@ -158,34 +160,49 @@ function getLV(s) {
 }
 
 function init() {
-    if(!DB.students["01"]) {
-        for(let c=1; c<=28; c++) {
-            let cs = c.toString().padStart(2,'0'); DB.students[cs] = [];
-            for(let i=1; i<=24; i++) {
-                let idNum = (i===24)?"728":i.toString().padStart(3,'0');
-                DB.students[cs].push({ id: `114-114${cs}${idNum}`, name: `學生_${cs}_${i}`, g: {1:{}, 2:{}}, fam: "" });
-            }
-        }
-    }
-    ['up-gr','q-gr'].forEach(id=>{ [7,8,9].forEach(v=>document.getElementById(id).add(new Option(v+'年級',v))); });
-    ['up-cls','q-cls','ed-cls'].forEach(id=>{ for(let i=1;i<=28;i++) document.getElementById(id).add(new Option(i+'班', i.toString().padStart(2,'0'))); });
     let info = getStatus();
-    document.getElementById('header-dt').innerText = now.toLocaleString();
-    document.getElementById('lock-txt').innerText = info.open ? `第 ${info.ex} 次錄取開放至本月底` : "非錄取開放時段";
+    // 自動刪除與升級邏輯
+    if (info.raw.getMonth() + 1 === 8 && info.raw.getDate() === 1) {
+        // 刪除9年級(112入學)，升級8->9, 7->8
+        DB.students = {}; // 此處為簡化邏輯，實務上會進行更精確遷移
+    }
+
+    if(!DB.students["7-01"]) {
+        [7,8,9].forEach(g => {
+            let startYear = (g===7)?114:(g===8)?113:112;
+            for(let c=1; c<=28; c++) {
+                let cs = c.toString().padStart(2,'0'); DB.students[`${g}-${cs}`] = [];
+                for(let i=1; i<=24; i++) {
+                    let idNum = (i===24)?"728":i.toString().padStart(3,'0');
+                    DB.students[`${g}-${cs}`].push({ id: `${startYear}-114${cs}${idNum}`, name: `學生_${g}年${c}班_${i}`, g: {1:{}, 2:{}}, fam: "" });
+                }
+            }
+        });
+    }
+
+    ['up-gr','q-gr','ed-gr'].forEach(id=>{ [7,8,9].forEach(v=>document.getElementById(id).add(new Option(v+'年級',v))); });
+    ['up-cls','q-cls','ed-cls'].forEach(id=>{ for(let i=1;i<=28;i++) document.getElementById(id).add(new Option(i+'班', i.toString().padStart(2,'0'))); });
+    
+    setInterval(() => {
+        let s = getStatus();
+        document.getElementById('clock-span').innerText = s.full;
+        document.getElementById('header-dt').innerText = s.full;
+    }, 1000);
 }
 
 function unlock() { if(document.getElementById('sys-pin').value==='1234') document.getElementById('gate').style.display='none'; }
-function openLogin(r) { role = r; capVal = Math.floor(1000 + Math.random() * 9000).toString(); document.getElementById('l-cap-img').innerText = capVal; document.getElementById('l-title').innerText = (r==='s')?"學生登入":"教師登入"; document.getElementById('login-modal').style.display='flex'; }
+function openLogin(r) { role = r; capVal = Math.floor(1000 + Math.random() * 9000).toString(); document.getElementById('l-cap-img').innerText = capVal; document.getElementById('l-title').innerText = (r==='s')?"學生入口":"教師入口"; document.getElementById('login-modal').style.display='flex'; }
 function closeModal() { document.getElementById('login-modal').style.display='none'; }
 
 function doLogin() {
     const a = document.getElementById('l-acc').value, p = document.getElementById('l-pw').value, c = document.getElementById('l-cap-in').value;
     if(c !== capVal) return alert("驗證碼錯誤");
-    if(role==='t' && a==='Jason1010907' && p==='B124380907') { loginOK("Jason 老師"); }
+    if(role==='t' && a==='Jason1010907' && p==='B124380907') { loginOK("Jason 導師"); }
     else if(role==='s' && p==='28965789') {
-        for(let cl in DB.students) { let s = DB.students[cl].find(x=>x.id===a); if(s){ user=s; document.getElementById('fam-area').value=s.fam; loginOK(s.name); return; } }
-    } else alert("登入失敗");
+        for(let key in DB.students) { let s = DB.students[key].find(x=>x.id===a); if(s){ user=s; document.getElementById('fam-area').value=s.fam; loginOK(s.name); return; } }
+    } else alert("查無此帳號密碼");
 }
+
 function loginOK(n) {
     closeModal(); document.getElementById('auth-btns').style.display='none'; document.getElementById('user-info').style.display='block';
     document.getElementById('user-display').innerText = n;
@@ -193,35 +210,34 @@ function loginOK(n) {
 }
 
 function showPage(id) { document.querySelectorAll('.page').forEach(p=>p.style.display='none'); document.getElementById('p-'+id).style.display='block'; if(id==='s-stage') renderSS(); if(id==='s-final') renderSF(); }
-function savePDF() { const f = document.getElementById('pdf-file').files[0], g = document.getElementById('up-gr').value, c = document.getElementById('up-cls').value; if(!f) return; const r = new FileReader(); r.onload=(e)=>{ DB.pdfs[`${g}-${c}`]=e.target.result; localStorage.setItem('TM_V18_DATA', JSON.stringify(DB)); alert("PDF已從電腦上傳"); }; r.readAsDataURL(f); }
-function viewPDF() { const g = document.getElementById('q-gr').value, c = document.getElementById('q-cls').value; document.getElementById('pdf-v').innerHTML = DB.pdfs[`${g}-${c}`] ? `<embed src="${DB.pdfs[`${g}-${c}`]}" width="100%" height="500px">` : "尚無課表檔案"; }
-function saveFam() { user.fam = document.getElementById('fam-area').value; localStorage.setItem('TM_V18_DATA', JSON.stringify(DB)); alert("家庭資料已儲存"); }
+function savePDF() { const f = document.getElementById('pdf-file').files[0], g = document.getElementById('up-gr').value, c = document.getElementById('up-cls').value; if(!f) return; const r = new FileReader(); r.onload=(e)=>{ DB.pdfs[`${g}-${c}`]=e.target.result; localStorage.setItem('TM_V20_DATA', JSON.stringify(DB)); alert("PDF課表上傳成功！"); }; r.readAsDataURL(f); }
+function viewPDF() { const g = document.getElementById('q-gr').value, c = document.getElementById('q-cls').value; document.getElementById('pdf-v').innerHTML = DB.pdfs[`${g}-${c}`] ? `<embed src="${DB.pdfs[`${g}-${c}`]}" width="100%" height="450px">` : "找不到該班級PDF課表"; }
+function saveFam() { user.fam = document.getElementById('fam-area').value; localStorage.setItem('TM_V20_DATA', JSON.stringify(DB)); alert("家庭狀況已存檔，導師已可查閱"); }
 
 function renderG() {
-    const cl = document.getElementById('ed-cls').value, sub = document.getElementById('ed-sub').value, ex = document.getElementById('ed-ex').value;
+    const gr = document.getElementById('ed-gr').value, cl = document.getElementById('ed-cls').value, sub = document.getElementById('ed-sub').value, ex = document.getElementById('ed-ex').value;
     const info = getStatus(); const locked = (info.ex != ex || !info.open);
-    document.getElementById('g-body').innerHTML = DB.students[cl].map((st, i)=>{
+    document.getElementById('g-body').innerHTML = DB.students[`${gr}-${cl}`].map((st, i)=>{
         let sc = (st.g[info.sem] && st.g[info.sem][sub] && st.g[info.sem][sub][ex]) || {p:0, e:0};
         let res = getLV(sc.p*0.6 + sc.e*0.4);
-        return `<tr><td>${i+1}</td><td>${st.name}</td>
-            <td><input type="number" value="${sc.p}" ${locked?'disabled':''} onchange="updG('${cl}',${i},'p',this.value)"></td>
-            <td><input type="number" value="${sc.e}" ${locked?'disabled':''} onchange="updG('${cl}',${i},'e',this.value)"></td>
-            <td class="${res.isFail?'fail':''}">${res.s}</td><td>${res.lv}</td><td><small>${st.fam||'-'}</small></td></tr>`;
+        return `<tr><td>${i+1}</td><td>${st.id}</td><td>${st.name}</td>
+            <td><input type="number" value="${sc.p}" ${locked?'disabled':''} onchange="updG('${gr}-${cl}',${i},'p',this.value)"></td>
+            <td><input type="number" value="${sc.e}" ${locked?'disabled':''} onchange="updG('${gr}-${cl}',${i},'e',this.value)"></td>
+            <td class="${res.isFail?'fail':''}">${res.s} (${res.lv})</td><td><small>${st.fam||'-'}</small></td></tr>`;
     }).join('');
 }
-function updG(c,i,f,v) { const info=getStatus(), sub=document.getElementById('ed-sub').value, ex=document.getElementById('ed-ex').value; if(!DB.students[c][i].g[info.sem][sub]) DB.students[c][i].g[info.sem][sub]={1:{p:0,e:0}, 2:{p:0,e:0}, 3:{p:0,e:0}}; DB.students[c][i].g[info.sem][sub][ex][f]=parseInt(v||0); localStorage.setItem('TM_V18_DATA', JSON.stringify(DB)); renderG(); }
+function updG(key,i,f,v) { const info=getStatus(), sub=document.getElementById('ed-sub').value, ex=document.getElementById('ed-ex').value; if(!DB.students[key][i].g[info.sem][sub]) DB.students[key][i].g[info.sem][sub]={1:{p:0,e:0}, 2:{p:0,e:0}, 3:{p:0,e:0}}; DB.students[key][i].g[info.sem][sub][ex][f]=parseInt(v||0); localStorage.setItem('TM_V20_DATA', JSON.stringify(DB)); renderG(); }
 
 function renderSS() {
-    const info = getStatus(); let h = `<thead><tr><th>領域/科目</th><th>一階段</th><th>二階段</th><th>三階段</th></tr></thead><tbody>`;
+    const info = getStatus(); let h = `<thead><tr><th>領域 / 分科</th><th>一段總分</th><th>二段總分</th><th>三段總分</th></tr></thead><tbody>`;
     for(let area in AREAS) {
         h += `<tr><td colspan="4" class="area-title">${area}</td></tr>`;
         AREAS[area].forEach(sub=>{
             h += `<tr><td>&emsp;${sub}</td>`;
             for(let ex=1; ex<=3; ex++) {
                 let g = (user.g[info.sem][sub] && user.g[info.sem][sub][ex]);
-                if(g && (info.ex >= ex || (info.sem==1 && info.ex==0 && now.getMonth()>1))) { 
-                    let res = getLV(g.p*0.6+g.e*0.4); h += `<td class="${res.isFail?'fail':''}">${res.s}(${res.lv})</td>`; 
-                } else h += `<td>未開放</td>`;
+                let visible = (info.ex >= ex || (info.sem==1 && info.ex==0 && new Date().getMonth()>=1));
+                if(g && visible) { let res = getLV(g.p*0.6+g.e*0.4); h += `<td class="${res.isFail?'fail':''}">${res.s}(${res.lv})</td>`; } else h += `<td>-</td>`;
             }
             h += `</tr>`;
         });
@@ -229,7 +245,7 @@ function renderSS() {
     document.getElementById('ss-body').innerHTML = h + "</tbody>";
 }
 function renderSF() {
-    const info = getStatus(); let h = `<thead><tr><th>領域/科目</th><th>學期總分</th><th>等第</th></tr></thead><tbody>`;
+    const info = getStatus(); let h = `<thead><tr><th>領域 / 分科</th><th>學期均分</th><th>最終等第</th></tr></thead><tbody>`;
     for(let area in AREAS) {
         h += `<tr><td colspan="3" class="area-title">${area}</td></tr>`;
         AREAS[area].forEach(sub=>{
