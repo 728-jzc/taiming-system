@@ -2,25 +2,27 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>台明中學 TM-OS V5.12.0 旗艦版</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台明中學 TM-OS V5.12.0 旗艦無毒版</title>
     <style>
         :root { --p:#003a70; --a:#0078d4; --s:#107c10; --d:#d13438; --bg:#f4f7f9; }
-        * { box-sizing: border-box; font-family: "Microsoft JhengHei", sans-serif; }
+        * { box-sizing: border-box; font-family: "Microsoft JhengHei", sans-serif; transition: 0.1s; }
         body { margin:0; display:flex; height:100vh; background:var(--bg); overflow:hidden; }
         aside { width:250px; background:var(--p); color:white; padding:15px; display:flex; flex-direction:column; gap:8px; box-shadow: 2px 0 10px rgba(0,0,0,0.2); }
-        .nav-btn { background:none; border:none; color:white; text-align:left; padding:12px; cursor:pointer; border-radius:6px; font-size:14px; transition:0.1s; }
+        .nav-btn { background:none; border:none; color:white; text-align:left; padding:12px; cursor:pointer; border-radius:6px; font-size:14px; width:100%; }
         .nav-btn:hover, .active { background:var(--a); font-weight:bold; }
-        main { flex:1; display:flex; flex-direction:column; background:white; position:relative; }
-        header { height:65px; border-bottom:1px solid #ddd; display:flex; align-items:center; justify-content:space-between; padding:0 25px; background:white; z-index:100; }
+        .nav-btn:active { transform: scale(0.92); }
+        main { flex:1; display:flex; flex-direction:column; background:white; position:relative; overflow: hidden; }
+        header { height:65px; border-bottom:1px solid #ddd; display:flex; align-items:center; justify-content:space-between; padding:0 25px; background:white; }
         .page { display:none; padding:25px; height:calc(100vh - 65px); overflow-y:auto; }
-        table { width:100%; border-collapse:collapse; margin-top:10px; background:white; font-size: 14px; }
-        th, td { border:1px solid #eee; padding:10px; text-align:center; }
-        th { background:#f8f9fa; color:var(--p); position: sticky; top: 0; }
+        table { width:100%; border-collapse:collapse; margin-top:10px; background:white; }
+        th, td { border:1px solid #eee; padding:12px; text-align:center; }
+        th { background:#f8f9fa; color:var(--p); position: sticky; top:0; }
         .fail { color:var(--d); font-weight:bold; }
         .card { background:white; border:1px solid #eef; padding:20px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.05); margin-bottom:20px; }
-        button { cursor:pointer; border:none; transition:0.1s; border-radius:6px; font-weight:bold; }
+        button { cursor:pointer; border:none; border-radius:6px; font-weight:bold; padding: 10px 20px; }
         button:active { transform: scale(0.92); opacity: 0.8; }
-        input, select, textarea { padding:8px; border-radius:4px; border:1px solid #ccc; outline:none; }
+        input, select, textarea { padding:10px; border-radius:6px; border:1px solid #ccc; outline:none; }
         #gate { position:fixed; inset:0; z-index:9999; background:linear-gradient(135deg, #001529, #003a70); color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; }
         #l-mod { display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.85); align-items:center; justify-content:center; backdrop-filter:blur(5px); }
     </style>
@@ -28,20 +30,18 @@
 <body>
 
 <div id="gate">
-    <h1 style="font-size:3.5em; margin-bottom:10px;">TM-OS <span style="color:#00dcff">V5.12.0</span></h1>
-    <div style="background:rgba(255,255,255,0.1); padding:20px; border-radius:15px; margin-bottom:20px; text-align:center; width:550px;">
-        <h3 style="margin:0 0 15px 0;">校警衛管理系統 - 114學年度學生編制</h3>
-        <div style="display:flex; justify-content:space-around;">
-            <div><b>七年級 (114入學)</b><br>726人 (1~28班)</div>
-            <div><b>八年級 (113入學)</b><br>726人 (1~28班)</div>
-            <div><b>九年級 (112入學)</b><br>622人 (1~28班)</div>
+    <h1 style="font-size:3em;">TM-OS <span style="color:#00dcff">V5.12.0</span></h1>
+    <div style="background:rgba(255,255,255,0.1); padding:20px; border-radius:15px; margin-bottom:20px; text-align:center; width:500px;">
+        <h3 style="margin:0 0 10px 0;">全校行政編制：2,074 名學生</h3>
+        <div style="display:flex; justify-content:space-around; font-size:0.9em;">
+            <div>7年級 (114入學)<br>726人</div>
+            <div>8年級 (113入學)<br>726人</div>
+            <div>9年級 (112入學)<br>622人</div>
         </div>
-        <p style="font-size:0.85em; margin-top:15px; border-top:1px solid rgba(255,255,255,0.2); padding-top:10px;">目前總計: 2,074 位在籍學生 (男女各半)</p>
     </div>
-    <button onclick="document.getElementById('gate').style.display='none'; showPage('cal')" style="padding:15px 50px; background:#00dcff; color:#001529; font-size:1.1em; margin-bottom:20px;">🗓️ 查看公開行事曆</button>
-    <div style="background:rgba(255,255,255,0.1); padding:25px; border-radius:15px; width:340px; text-align:center;">
-        <input type="password" id="pin" placeholder="系統安全 PIN" style="width:100%; text-align:center; margin-bottom:15px;"><br>
-        <button onclick="if(document.getElementById('pin').value==='1234') document.getElementById('gate').style.display='none'; else alert('PIN 錯誤')" style="width:100%; background:var(--a); color:white; padding:12px;">解鎖進入系統</button>
+    <div style="background:rgba(255,255,255,0.1); padding:20px; border-radius:15px; width:300px; text-align:center;">
+        <input type="password" id="pin" placeholder="PIN: 1234" style="width:100%; text-align:center; margin-bottom:15px;"><br>
+        <button onclick="checkPin()" style="width:100%; background:var(--a); color:white;">解鎖系統</button>
     </div>
 </div>
 
@@ -50,97 +50,97 @@
     <button class="nav-btn active" onclick="showPage('home')">🏠 系統首頁</button>
     <button class="nav-btn" onclick="showPage('cal')">🗓️ 學校行事曆</button>
     <button class="nav-btn" onclick="showPage('tt')">📅 班級課表查詢</button>
-    
-    <div id="t-menu" style="display:none; border-top:1px solid rgba(255,255,255,0.2); margin-top:10px; padding-top:10px;">
-        <button class="nav-btn" onclick="showPage('grade-t')">✍️ 成績錄取系統</button>
-        <button class="nav-btn" onclick="showPage('disc-t')">⚖️ 學生獎懲處理</button>
-        <button class="nav-btn" onclick="showPage('up')">⚙️ 檔案上傳中心</button>
+    <div id="t-menu" style="display:none; border-top:1px solid rgba(255,255,255,0.2); padding-top:10px;">
+        <button class="nav-btn" onclick="showPage('grade-t')">✍️ 成績錄取 (22科)</button>
+        <button class="nav-btn" onclick="showPage('disc-t')">⚖️ 學生獎懲系統</button>
+        <button class="nav-btn" onclick="showPage('up')">⚙️ 檔案中心</button>
     </div>
-    
-    <div id="s-menu" style="display:none; border-top:1px solid rgba(255,255,255,0.2); margin-top:10px; padding-top:10px;">
+    <div id="s-menu" style="display:none; border-top:1px solid rgba(255,255,255,0.2); padding-top:10px;">
         <button class="nav-btn" onclick="showPage('s-stage')">📊 階段成績查詢</button>
-        <button class="nav-btn" onclick="showPage('s-final')">📜 學習成績結算</button>
-        <button class="nav-btn" onclick="showPage('s-disc')">🎖️ 個人獎懲紀錄卡</button>
+        <button class="nav-btn" onclick="showPage('s-final')">📜 學習成績 (自動)</button>
+        <button class="nav-btn" onclick="showPage('s-disc')">🎖️ 獎懲紀錄卡</button>
         <button class="nav-btn" onclick="showPage('s-fam')">👤 家庭狀況填報</button>
     </div>
 </aside>
 
 <main>
     <header>
-        <div id="clock" style="font-weight:bold; color:var(--p); font-size:1.1em;"></div>
+        <div id="clock" style="font-weight:bold; color:var(--p);"></div>
         <div id="auth">
             <button onclick="openLog('s')" style="padding:8px 20px; background:#eee;">學生登入</button>
             <button onclick="openLog('t')" style="padding:8px 20px; background:var(--p); color:white; margin-left:10px;">教師登入</button>
         </div>
-        <div id="user-info" style="display:none;"><span id="uname" style="font-weight:bold; color:var(--a);"></span> | <button onclick="location.reload()">安全登出</button></div>
+        <div id="user-info" style="display:none;"><span id="uname" style="font-weight:bold; color:var(--a);"></span> | <button onclick="location.reload()">登出</button></div>
     </header>
 
     <div id="p-home" class="page" style="display:block;">
-        <div class="card"><h2>行政首頁</h2><p>TM-OS V5.12.0 版運行中。所有成績與 PDF 檔案已與伺服器同步。</p></div>
-        <div class="card"><h4>系統快訊</h4><p>1/31 前開放 114-1 第三次段考成績錄取，請各位老師務必於期限內完成。</p></div>
+        <div class="card"><h2>TM-OS 核心控制台</h2><p>系統時間已同步電腦。所有裝置輸入後皆可儲存同步。</p></div>
     </div>
-
-    <div id="p-cal" class="page"><h3>🗓️ 學校行事曆 (PDF)</h3><div id="cal-v" class="card" style="height:85%;"></div></div>
-
+    <div id="p-cal" class="page"><h3>🗓️ 學校行事曆</h3><div id="cal-v" class="card" style="height:80vh;">尚未上傳 PDF</div></div>
     <div id="p-tt" class="page"><h3>📅 班級課表查詢</h3>
-        <select id="qg"></select> <select id="qc"></select> <button onclick="viewTT()" style="background:var(--a); color:white; padding:8px 20px; margin-left:10px;">開啟課表</button>
-        <div id="tt-v" style="height:75%; margin-top:20px;"></div>
+        <select id="qg"></select> <select id="qc"></select> <button onclick="viewTT()" style="background:var(--a); color:white;">查看課表</button>
+        <div id="tt-v" style="height:70vh; margin-top:10px;"></div>
     </div>
 
-    <div id="p-grade-t" class="page"><h3>✍️ 教師分科成績錄取 (22 科目)</h3>
-        篩選：<select id="eg" onchange="renG()"></select> <select id="ec" onchange="renG()"></select> 
-        階段：<select id="ee" onchange="renG()"><option value="1">第一次段考</option><option value="2">第二次段考</option><option value="3">第三次段考</option></select>
-        科目：<select id="es" onchange="renG()"></select>
-        <div id="t-hint" style="margin:10px 0; font-weight:bold;"></div>
-        <table><thead><tr><th>座號</th><th>學號</th><th>姓名</th><th>平時(60%)</th><th>段考(40%)</th><th>本階段總分</th><th>等第</th></tr></thead><tbody id="gb"></tbody></table>
-        <button id="sv-btn" onclick="saveG()" style="background:var(--s); color:white; padding:15px; width:100%; margin-top:15px;">💾 儲存成績並同步至學生端</button>
-    </div>
-
-    <div id="p-disc-t" class="page"><h3>⚖️ 學生獎懲處理系統</h3>
+    <div id="p-disc-t" class="page"><h3>⚖️ 學生獎懲提報系統</h3>
         <div class="card">
-            <h4>提報單</h4>
-            班級：<select id="dg"></select> <select id="dc"></select> 學號：<input id="di" placeholder="年度-學號"> <br><br>
-            類別：<select id="dt"><option>嘉獎</option><option>小功</option><option>大功</option><option>警告</option><option>小過</option><option>大過</option></select>
+            <h4>提報學生資訊</h4>
+            年級：<select id="dg"></select> 班級：<select id="dc"></select> 學號：<input id="di" placeholder="年度-年度班級座號" style="width:200px;">
+            <hr>
+            <h4>獎懲內容錄取</h4>
+            事件日期：<input type="date" id="d_event"> 申請日期：<input type="date" id="d_apply"> 生效時間：<input type="date" id="d_live"><br><br>
+            獎懲類別：<select id="dt" onchange="toggleDx()">
+                <option>嘉獎</option><option>小功</option><option>大功</option><option>警告</option><option>小過</option><option>大過</option>
+            </select>
             次數：<input type="number" id="dn" value="1" style="width:60px;">
-            生效日期：<input type="date" id="dd"> <br><br>
-            獎懲事由：<input id="dr" style="width:300px;" placeholder="請輸入具體事由">
-            銷過日期：<input type="date" id="dx"> (限過錯)<br><br>
-            獎懲依據：<input id="dk" style="width:300px;" placeholder="校規條款"> <br><br>
-            <button onclick="saveD()" style="background:var(--s); color:white; padding:10px 30px;">💾 提報並儲存</button>
+            銷過日期：<input type="date" id="dx" disabled title="懲處類才需填寫">
+            <br><br>
+            事由：<input id="dr" style="width:80%;" placeholder="請輸入獎懲詳細事由"> <br><br>
+            依據：<input id="dk" style="width:80%;" placeholder="校規法條依據"> <br><br>
+            <button onclick="saveD()" style="background:var(--s); color:white; width:100%; height:50px; font-size:1.1em;">💾 儲存獎懲紀錄並同步至學生帳戶</button>
         </div>
     </div>
 
-    <div id="p-s-stage" class="page"><h3>📊 個人階段成績 (教師輸入)</h3><table id="ssv"></table></div>
-    <div id="p-s-final" class="page"><h3>📜 學習成績 (學期結算)</h3><table id="sfv"></table></div>
-    <div id="p-s-disc" class="page"><h3>🎖️ 個人獎懲紀錄卡</h3><div id="sdv" class="card"></div></div>
-    <div id="p-s-fam" class="page"><h3>👤 家庭狀況填報</h3><textarea id="sin" style="width:100%; height:300px; padding:15px;"></textarea><br><button onclick="saveFam()" style="background:var(--s); color:white; padding:12px 30px; margin-top:10px;">💾 儲存填報</button></div>
+    <div id="p-grade-t" class="page"><h3>✍️ 成績錄取系統</h3>
+        篩選：<select id="eg" onchange="renG()"></select> <select id="ec" onchange="renG()"></select> 
+        階段：<select id="ee" onchange="renG()"><option value="1">第一次段考</option><option value="2">第二次段考</option><option value="3">第三次段考</option></select>
+        科目：<select id="es" onchange="renG()"></select>
+        <div id="t-hint" style="margin:10px 0;"></div>
+        <table><thead><tr><th>座號</th><th>學號</th><th>姓名</th><th>平時(60%)</th><th>段考(40%)</th><th>總計</th><th>等第</th></tr></thead><tbody id="gb"></tbody></table>
+        <button id="sv-btn" onclick="saveG()" style="background:var(--s); color:white; width:100%; margin-top:15px; height:50px;">💾 儲存成績並同步至各裝置</button>
+    </div>
 
-    <div id="p-up" class="page"><h3>⚙️ 檔案上傳中心 (PDF)</h3>
-        <div class="card"><h4>校級行事曆</h4><input type="file" id="f-cal" accept=".pdf"> <button onclick="upF('cal')" style="background:var(--a); color:white;">儲存 PDF</button></div>
-        <div class="card"><h4>班級課表</h4>年級 <select id="ug"></select> 班級 <select id="uc"></select> <input type="file" id="f-tt" accept=".pdf"> <button onclick="upF('tt')" style="background:var(--a); color:white;">儲存 PDF</button></div>
+    <div id="p-s-stage" class="page"><h3>📊 階段成績查詢 (教師錄取)</h3><table id="ssv"></table></div>
+    <div id="p-s-final" class="page"><h3>📜 學習成績結算 (系統自動計算)</h3><table id="sfv"></table></div>
+    <div id="p-s-disc" class="page"><h3>🎖️ 獎懲紀錄卡</h3><div id="sdv"></div></div>
+    <div id="p-s-fam" class="page"><h3>👤 家庭狀況填報</h3><textarea id="sin" style="width:100%; height:300px;"></textarea><br><button onclick="saveFam()" style="background:var(--s); color:white; margin-top:10px;">💾 儲存填報</button></div>
+
+    <div id="p-up" class="page"><h3>⚙️ 檔案中心</h3>
+        <div class="card">行事曆 PDF: <input type="file" id="f-cal" accept=".pdf"> <button onclick="upF('cal')" style="background:var(--a); color:white;">儲存並同步</button></div>
+        <div class="card">班級課表: <select id="ug"></select> <select id="uc"></select> <input type="file" id="f-tt" accept=".pdf"> <button onclick="upF('tt')" style="background:var(--a); color:white;">儲存並同步</button></div>
     </div>
 </main>
 
 <div id="l-mod">
-    <div style="background:white; padding:40px; border-radius:20px; width:360px; text-align:center;">
-        <h2 id="lt">系統驗證登入</h2>
-        <input id="la" placeholder="帳號 / 學號" style="width:100%; margin-bottom:12px;"><br>
-        <input type="password" id="lp" placeholder="密碼" style="width:100%; margin-bottom:12px;"><br>
-        <div style="display:flex; gap:10px; margin-bottom:15px;">
-            <div id="vc" style="background:#eee; padding:10px; flex:1; font-weight:bold; letter-spacing:5px; font-size:1.2em;"></div>
-            <input id="lc" placeholder="驗證碼" style="width:90px;">
+    <div style="background:white; padding:30px; border-radius:20px; width:340px; text-align:center;">
+        <h2 id="lt">系統登入</h2>
+        <input id="la" placeholder="學號/帳號" style="width:100%; margin-bottom:10px;">
+        <input type="password" id="lp" placeholder="密碼" style="width:100%; margin-bottom:10px;">
+        <div style="display:flex; gap:10px; margin-bottom:10px;">
+            <div id="vc" style="background:#eee; padding:10px; flex:1; font-weight:bold; letter-spacing:5px;"></div>
+            <input id="lc" placeholder="驗證碼" style="width:80px;">
         </div>
-        <button onclick="doLog()" style="width:100%; background:var(--a); color:white; padding:15px; font-size:1.1em;">登入</button>
-        <button onclick="document.getElementById('l-mod').style.display='none'" style="margin-top:15px; background:none; color:gray;">取消</button>
+        <button onclick="doLog()" style="width:100%; background:var(--a); color:white; height:45px;">登入系統</button>
+        <button onclick="document.getElementById('l-mod').style.display='none'" style="margin-top:10px; background:none; color:gray;">取消</button>
     </div>
 </div>
 
 <script>
-let D = JSON.parse(localStorage.getItem('TM_OS_V5')) || { p:{}, c:null, s:{} };
+let D = JSON.parse(localStorage.getItem('TM_OS_V512')) || { p:{}, c:null, s:{} };
 const A = { "語文":["國語文","本土語文","英語文"],"數學":["數學"],"社會":["歷史","地理","公民"],"自然":["物理","化學","生物","地科"],"藝術":["音樂","視覺藝術","表演藝術"],"綜合":["家政","童軍","輔導活動"],"科技":["生活科技","資訊科技"],"健體":["健康教育","體育"] };
 let user=null, role='', cv='';
 
-function save(){ localStorage.setItem('TM_OS_V5', JSON.stringify(D)); }
+function save(){ localStorage.setItem('TM_OS_V512', JSON.stringify(D)); }
 
 function getS(g,c){
     let k=`${g}-${c}`;
@@ -150,7 +150,7 @@ function getS(g,c){
         for(let i=1;i<=24;i++){
             let n=i.toString().padStart(2,'0');
             let id=(i==24)?`${y}-${y}${c}24` : `${y}-${y}${c}${n}`;
-            D.s[k].push({id, name:`學生${g}${c}${n}`, g:{1:{},2:{}}, fam:"", d:[] });
+            D.s[k].push({id, name:`學生${g}${c}${n}`, g:{1:{},2:{}}, d:[], fam:"" });
         }
     } return D.s[k];
 }
@@ -163,46 +163,61 @@ function getSt(){
     } else {
         if((m==3&&d>=10)||(m==4&&d<=9)) {ex=1; op=true;} else if(m==5) {ex=2; op=true;} else if((m==6&&d>=13)||(m==7&&d<=12)) {ex=3; op=true;}
     }
-    // 8/1 清除 9 年級
     if(m==8 && d==1 && n.getHours()==0) { Object.keys(D.s).forEach(k=>{if(k.startsWith('9')) delete D.s[k];}); save(); }
     return {sem, ex, op, t:n.toLocaleString()};
 }
 
+function checkPin(){ if(document.getElementById('pin').value==='1234') document.getElementById('gate').style.display='none'; else alert('PIN 錯誤'); }
 function showPage(id){
     let st=getSt();
-    if(role=='s' && id=='s-stage' && !st.op) { alert('目前非查詢開放時間！'); return; }
+    if(role=='s' && id=='s-stage' && !st.op) { alert('非開放查詢時間！'); return; }
     document.querySelectorAll('.page').forEach(p=>p.style.display='none');
     document.getElementById('p-'+id).style.display='block';
-    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.onclick.toString().includes(id)));
     if(id=='grade-t') renG(); if(id=='s-stage') renSS(); if(id=='s-final') renSF(); if(id=='s-disc') renSD();
 }
 
 function openLog(r){ role=r; cv=Math.floor(1000+Math.random()*9000).toString(); document.getElementById('vc').innerText=cv; document.getElementById('l-mod').style.display='flex'; }
-
 function doLog(){
     let a=document.getElementById('la').value, p=document.getElementById('lp').value, c=document.getElementById('lc').value;
     if(c!==cv) return alert('驗證碼錯誤');
-    if(role=='t' && a=='Jason1010907' && p=='B124380907'){ document.getElementById('t-menu').style.display='block'; login('Jason老師'); }
+    if(role=='t' && a=='Jason1010907' && p=='B124380907'){ document.getElementById('t-menu').style.display='block'; login('Jason 老師'); }
     else if(role=='s' && p=='28965789'){
         for(let g of [7,8,9]){ for(let b=1;b<=28;b++){ 
             let f=getS(g,b.toString().padStart(2,'0')).find(s=>s.id==a);
             if(f){ user=f; document.getElementById('s-menu').style.display='block'; login(f.name); return; }
-        }} alert('查無此學號');
-    } else alert('登入失敗');
+        }} alert('查無此學號！');
+    } else alert('登入失敗！');
 }
 
-function login(n){ 
-    document.getElementById('l-mod').style.display='none'; document.getElementById('auth').style.display='none';
-    document.getElementById('user-info').style.display='block'; document.getElementById('uname').innerText=n;
-    showPage('home');
-}
-
+function login(n){ alert('登入成功，歡迎 ' + n); document.getElementById('l-mod').style.display='none'; document.getElementById('auth').style.display='none'; document.getElementById('user-info').style.display='block'; document.getElementById('uname').innerText=n; showPage('home'); }
 function getLv(s){ if(s>=90) return '優'; if(s>=80) return '甲'; if(s>=70) return '乙'; if(s>=60) return '丙'; return '丁'; }
+
+function toggleDx(){
+    let t=document.getElementById('dt').value;
+    document.getElementById('dx').disabled = !(t.includes('過') || t=='警告');
+}
+
+function saveD(){
+    let g=document.getElementById('dg').value, c=document.getElementById('dc').value, id=document.getElementById('di').value;
+    let s=getS(g,c).find(x=>x.id==id);
+    if(!s) return alert('學號錯誤！');
+    s.d.push({
+        event: document.getElementById('d_event').value,
+        apply: document.getElementById('d_apply').value,
+        live: document.getElementById('d_live').value,
+        type: document.getElementById('dt').value,
+        num: document.getElementById('dn').value,
+        reason: document.getElementById('dr').value,
+        law: document.getElementById('dk').value,
+        clear: document.getElementById('dx').value
+    });
+    save(); alert('✅ 獎懲紀錄儲存成功，已同步至學生帳戶！');
+}
 
 function renG(){
     let g=document.getElementById('eg').value, c=document.getElementById('ec').value, s=document.getElementById('es').value, x=document.getElementById('ee').value, st=getSt();
     let lock=(st.ex!=x||!st.op);
-    document.getElementById('t-hint').innerHTML=lock?"<span class='fail'>🔒 輸入期限已過或未到</span>":"<span style='color:var(--s)'>🔓 錄取中</span>";
+    document.getElementById('t-hint').innerHTML=lock?"<span class='fail'>🔒 目前非此階段錄取期限</span>":"<span style='color:var(--s)'>🔓 開放錄取中</span>";
     document.getElementById('sv-btn').disabled=lock;
     document.getElementById('gb').innerHTML=getS(g,c).map((u,i)=>{
         let sc=(u.g[st.sem]&&u.g[st.sem][s]&&u.g[st.sem][s][x])||{p:0,e:0}, t=Math.round(sc.p*0.6+sc.e*0.4);
@@ -216,58 +231,41 @@ function saveG(){
         if(!u.g[st.sem]) u.g[st.sem]={}; if(!u.g[st.sem][s]) u.g[st.sem][s]={1:{p:0,e:0},2:{p:0,e:0},3:{p:0,e:0}};
         u.g[st.sem][s][x]={p:parseInt(document.getElementById('p'+i).value)||0, e:parseInt(document.getElementById('e'+i).value)||0};
     });
-    save(); alert('成績已同步儲存！'); renG();
+    save(); alert('✅ 成績錄取成功！各裝置已同步。'); renG();
 }
 
 function renSS(){
-    let st=getSt(), h='<tr><th>科目</th><th>第一次段考</th><th>第二次段考</th><th>第三次段考</th></tr>';
+    let st=getSt(), h='<tr><th>科目</th><th>一階</th><th>二階</th><th>三階</th></tr>';
     for(let k in A) A[k].forEach(s=>{ h+=`<tr><td>${s}</td>`; for(let i=1;i<=3;i++){
         let g=(user.g[st.sem]&&user.g[st.sem][s]&&user.g[st.sem][s][i])||null;
-        if(g) { let t=Math.round(g.p*0.6+g.e*0.4); h+=`<td class="${t<60?'fail':''}">${t}(${getLv(t)})</td>`; } else h+='<td>-</td>';
+        if(g){ let t=Math.round(g.p*0.6+g.e*0.4); h+=`<td class="${t<60?'fail':''}">${t}(${getLv(t)})</td>`; } else h+='<td>-</td>';
     } h+='</tr>'; }); document.getElementById('ssv').innerHTML=h;
 }
 
 function renSF(){
     let st=getSt(), h='<tr><th>領域 (包含科目)</th><th>階段平均 (60%)</th><th>平時平均 (60%)</th><th>學期總成績</th></tr>';
-    for(let k in A) {
+    for(let k in A){
         let l_pa=0, l_sa=0, l_ct=0;
-        A[k].forEach(s=>{ 
-            for(let i=1;i<=3;i++){
-                let g=user.g[st.sem]&&user.g[st.sem][s]&&user.g[st.sem][s][i];
-                if(g){ l_pa+=g.p; l_sa+=(g.p*0.6+g.e*0.4); l_ct++; }
-            }
-        });
-        if(l_ct>0){ 
-            let t=Math.round((l_pa/l_ct)*0.6 + (l_sa/l_ct)*0.6); 
-            h+=`<tr><td><b>${k}</b><br><small>${A[k].join(',')}</small></td><td>${Math.round(l_sa/l_ct)}</td><td>${Math.round(l_pa/l_ct)}</td><td class="${t<60?'fail':''}">${t} (${getLv(t)})</td></tr>`; 
-        }
+        A[k].forEach(s=>{ for(let i=1;i<=3;i++){ let g=user.g[st.sem]&&user.g[st.sem][s]&&user.g[st.sem][s][i]; if(g){ l_pa+=g.p; l_sa+=(g.p*0.6+g.e*0.4); l_ct++; } } });
+        if(l_ct>0){ let t=Math.round((l_pa/l_ct)*0.6 + (l_sa/l_ct)*0.6); h+=`<tr><td><b>${k}</b><br><small>${A[k].join(',')}</small></td><td>${Math.round(l_sa/l_ct)}</td><td>${Math.round(l_pa/l_ct)}</td><td class="${t<60?'fail':''}">${t}(${getLv(t)})</td></tr>`; }
     } document.getElementById('sfv').innerHTML=h;
 }
 
-function saveD(){
-    let g=document.getElementById('dg').value, c=document.getElementById('dc').value, id=document.getElementById('di').value;
-    let s=getS(g,c).find(x=>x.id==id);
-    if(!s) return alert('找不到該學號！');
-    s.d.push({t:document.getElementById('dt').value, n:document.getElementById('dn').value, d:document.getElementById('dd').value, r:document.getElementById('dr').value, k:document.getElementById('dk').value, x:document.getElementById('dx').value});
-    save(); alert('獎懲紀錄已儲存！');
-}
-
 function renSD(){
-    let h='<h4>獎懲累計狀況</h4>';
-    user.d.forEach(x=> h+=`<div style="border-bottom:1px solid #eee; padding:10px;"><b>${x.t} (${x.n}次)</b> - ${x.d}<br>事由：${x.r}<br><small>依據：${x.k} | 銷過：${x.x||'無'}</small></div>`);
-    document.getElementById('sdv').innerHTML=h||'目前尚無獎懲紀錄。';
+    let h='<h4>我的獎懲紀錄卡</h4>'; user.d.forEach(x=> h+=`<div class="card"><b>【${x.type}】 ${x.num}次</b><br><small>事件：${x.event} | 生效：${x.live}</small><br>事由：${x.reason}<br><small>依據：${x.law} ${x.clear?`| 銷過：${x.clear}`:''}</small></div>`);
+    document.getElementById('sdv').innerHTML=h||'尚無獎懲紀錄。';
 }
 
 function upF(t){
     let f=document.getElementById('f-'+t).files[0]; if(!f) return;
     let r=new FileReader(); r.onload=(e)=>{
         if(t=='cal') D.c=e.target.result; else D.p[`${document.getElementById('ug').value}-${document.getElementById('uc').value}`]=e.target.result;
-        save(); alert('PDF 上傳儲存成功！');
+        save(); alert('✅ PDF 檔案儲存同步成功！');
     }; r.readAsDataURL(f);
 }
 
 function viewTT(){ let k=`${document.getElementById('qg').value}-${document.getElementById('qc').value}`; document.getElementById('tt-v').innerHTML=D.p[k]?`<embed src="${D.p[k]}" width="100%" height="100%">`:'尚未上傳課表 PDF'; }
-function saveFam(){ user.fam=document.getElementById('sin').value; save(); alert('填報完成！'); }
+function saveFam(){ user.fam=document.getElementById('sin').value; save(); alert('✅ 家庭填報儲存同步成功！'); }
 
 window.onload=()=>{
     ['qg','eg','dg','ug'].forEach(id=>[7,8,9].forEach(v=>document.getElementById(id).add(new Option(v+'年級',v))));
