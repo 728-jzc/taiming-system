@@ -277,3 +277,21 @@ window.onload=()=>{
 </script>
 </body>
 </html>
+
+// 在原代碼中的 save 函數做了強化
+function save() {
+    try {
+        const dataString = JSON.stringify(D);
+        localStorage.setItem('TM_OS_V512', dataString);
+        
+        // 驗證機制：再次讀取確認
+        const checkData = localStorage.getItem('TM_OS_V512');
+        if (checkData === dataString) {
+            console.log("資料同步成功，檔案已加固。");
+        } else {
+            throw new Error("同步不完整");
+        }
+    } catch (e) {
+        alert("⚠️ 儲存空間異常，請確認硬碟空間或瀏覽器權限！");
+    }
+}
