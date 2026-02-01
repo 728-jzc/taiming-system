@@ -1,330 +1,200 @@
-src/
- ├─ firebase.js              # Firebase 設定
- ├─ constants/
- │    └─ authRule.js         # 帳號密碼與PIN設定
- ├─ utils/
- │    └─ calcScore.js        # 成績計算函式
- ├─ pages/
- │    ├─ Login.jsx            # 登入頁（教師/學生分流）
- │    ├─ StudentDashboard.jsx # 學生首頁，查詢成績
- │    ├─ StudentFamily.jsx    # 家庭狀況填寫
- │    ├─ TeacherDashboard.jsx # 教師首頁，選擇年級/班級/科目輸入成績
- │    ├─ PDFUpload.jsx        # 課表/行事曆上傳
- │    └─ Discipline.jsx       # 獎懲系統
- ├─ App.jsx
- └─ main.jsx
-// src/utils/calcScore.js
-export const calcPhaseScore = (dailyScores, examScore) => {
-  return dailyScores * 0.6 + examScore * 0.4;
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+school-system/
+│
+├─ public/
+│   └─ index.html
+├─ src/
+│   ├─ App.js
+│   ├─ index.js
+│   ├─ firebase.js
+│   ├─ components/
+│   │   ├─ Login.js
+│   │   ├─ Dashboard.js
+│   │   ├─ TeacherGrades.js
+│   │   ├─ StudentGrades.js
+│   │   ├─ PDFUpload.js
+│   │   ├─ RewardPunishment.js
+│   │   └─ FamilyInfo.js
+└─ package.json
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
-export const calcSemesterTotal = (phases) => {
-  // phases = [phase1Total, phase2Total, phase3Total]
-  const total = phases.reduce((a, b) => a + b, 0) / phases.length;
-  return total;
-};
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const storage = getStorage(app);
+import React, { useState } from 'react';
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from '../firebase';
 
-export const getGradeLetter = (score) => {
-  if (score >= 90) return "優";
-  if (score >= 80) return "甲";
-  if (score >= 70) return "乙";
-  if (score >= 60) return "丙";
-  return "丁"; // <60 紅字
-};
-// src/pages/Login.jsx
-import React, { useState } from "react";
-import { TEACHER_ACCOUNT, STUDENT_DEFAULT_PASSWORD, PIN_CODE } from "../constants/authRule";
-
-export default function Login({ onLogin }) {
-  const [role, setRole] = useState("student");
-  const [account, setAccount] = useState("");
+const Login = ({ setUser }) => {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [pin, setPin] = useState("");
   const [captcha, setCaptcha] = useState("");
-  const [captchaValue, setCaptchaValue] = useState(Math.floor(Math.random()*9000)+1000);
+  const [captchaCode, setCaptchaCode] = useState(Math.floor(1000 + Math.random() * 9000));
 
-  const handleLogin = () => {
-    if (pin !== PIN_CODE) return alert("PIN 錯誤");
-    if (parseInt(captcha) !== captchaValue) return alert("驗證碼錯誤");
+  const handleLogin = async () => {
+    if(pin !== "1234") return alert("PIN 碼錯誤");
+    if(captcha !== captchaCode.toString()) return alert("驗證碼錯誤");
 
-    if(role==="teacher"){
-      if(account===TEACHER_ACCOUNT.account && password===TEACHER_ACCOUNT.password){
-        onLogin("teacher");
-      } else alert("教師帳密錯誤");
-    } else {
-      if(password===STUDENT_DEFAULT_PASSWORD){
-        onLogin("student", account);
-      } else alert("學生密碼錯誤");
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      setUser(userCredential.user);
+    } catch(err) {
+      alert(err.message);
     }
   }
 
   return (
     <div>
-      <h2>登入 ({role === "teacher" ? "教師" : "學生"})</h2>
-      <select value={role} onChange={e=>setRole(e.target.value)}>
-        <option value="student">學生</option>
-        <option value="teacher">教師</option>
-      </select>
-      <input placeholder="帳號" value={account} onChange={e=>setAccount(e.target.value)} />
-      <input placeholder="密碼" type="password" value={password} onChange={e=>setPassword(e.target.value)} />
-      <input placeholder="PIN" value={pin} onChange={e=>setPin(e.target.value)} />
-      <div>
-        驗證碼: {captchaValue}
-        <input placeholder="輸入驗證碼" value={captcha} onChange={e=>setCaptcha(e.target.value)} />
-      </div>
+      <h2>登入系統</h2>
+      <input placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)}/>
+      <input placeholder="密碼" type="password" value={password} onChange={e=>setPassword(e.target.value)}/>
+      <input placeholder="PIN" value={pin} onChange={e=>setPin(e.target.value)}/>
+      <p>驗證碼：{captchaCode}</p>
+      <input placeholder="輸入驗證碼" value={captcha} onChange={e=>setCaptcha(e.target.value)}/>
       <button onClick={handleLogin}>登入</button>
     </div>
   );
 }
-// src/pages/TeacherDashboard.jsx
-import React, { useState, useEffect } from "react";
-import { db } from "../firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
-import { calcPhaseScore } from "../utils/calcScore";
 
-const subjects = ["國語文","本土語文","英語文","數學","歷史","地理","公民","生物","物理","化學","地球科學","音樂","視覺藝術","表演藝術","家政","童軍","輔導活動","生活科技","資訊科技","健康教育","體育"];
+export default Login;
+import React, { useState, useEffect } from 'react';
+import { db } from '../firebase';
+import { collection, doc, setDoc, getDocs } from "firebase/firestore";
 
-export default function TeacherDashboard() {
-  const [grade,setGrade] = useState(7);
-  const [classNo,setClassNo] = useState(1);
-  const [studentList,setStudentList] = useState([]);
-  const [scores,setScores] = useState({});
+const subjects = [
+  "國語文","本土語文","英語文","數學","歷史","地理","公民",
+  "物理","化學","生物","地球科學","音樂","視覺藝術","表演藝術",
+  "家政","童軍","輔導活動","生活科技","資訊科技","健康教育","體育"
+];
 
-  useEffect(()=>{
-    // 讀取班級學生
-    const fetchStudents = async () => {
-      const ids = Array.from({length:24},(_,i)=>{
-        const seat = (i<9?`0${i+1}`:i+1);
-        return `${113}${grade}${classNo}${seat}`; //範例學生ID
-      });
-      setStudentList(ids);
-    }
-    fetchStudents();
-  },[grade,classNo]);
+const TeacherGrades = ({ selectedClass }) => {
+  const [grades, setGrades] = useState({});
 
-  const handleScoreChange = (studentId, subject, daily, exam) => {
-    const total = calcPhaseScore(daily, exam);
-    setScores(prev => ({
-      ...prev,
-      [studentId]: {
-        ...prev[studentId],
-        [subject]: { daily, exam, total }
+  const saveGrades = async () => {
+    for(const studentId in grades){
+      for(const sub of subjects){
+        await setDoc(doc(db, "grades", `${studentId}_${sub}`), {
+          ...grades[studentId][sub],
+          timestamp: new Date()
+        });
       }
-    }));
-  }
-
-  const handleSave = async () => {
-    for(const studentId of studentList){
-      const docRef = doc(db,"students",studentId);
-      await setDoc(docRef, { scores: scores[studentId] }, { merge:true });
     }
-    alert("成績已儲存同步至雲端！");
+    alert("成績已儲存並同步到雲端！");
   }
 
   return (
     <div>
       <h2>教師成績輸入</h2>
-      <select value={grade} onChange={e=>setGrade(Number(e.target.value))}>
-        {[7,8,9].map(g=><option key={g} value={g}>{g}年級</option>)}
-      </select>
-      <select value={classNo} onChange={e=>setClassNo(Number(e.target.value))}>
-        {Array.from({length:28},(_,i)=><option key={i+1} value={i+1}>{i+1}班</option>)}
-      </select>
-      <table border="1">
-        <thead>
-          <tr>
-            <th>學號</th>
-            {subjects.map(sub=><th key={sub}>{sub}</th>)}
-          </tr>
-        </thead>
-        <tbody>
-          {studentList.map(sid=>(
-            <tr key={sid}>
-              <td>{sid}</td>
-              {subjects.map(sub=>(
-                <td key={sub}>
-                  <input type="number" placeholder="平時" onChange={e=>handleScoreChange(sid,sub,Number(e.target.value),scores[sid]?.[sub]?.exam||0)} />
-                  <input type="number" placeholder="段考" onChange={e=>handleScoreChange(sid,sub,scores[sid]?.[sub]?.daily||0,Number(e.target.value))} />
-                  <div>總分: {scores[sid]?.[sub]?.total || "-"}</div>
-                </td>
-              ))}
-            </tr>
+      {Object.keys(grades).map(studentId => (
+        <div key={studentId}>
+          <h4>{studentId}</h4>
+          {subjects.map(sub => (
+            <div key={sub}>
+              <span>{sub} 平時:</span>
+              <input type="number" min="0" max="100" 
+                onChange={e=>{
+                  setGrades(prev=>({
+                    ...prev,
+                    [studentId]:{
+                      ...prev[studentId],
+                      [sub]:{
+                        ...prev[studentId]?.[sub],
+                        daily: Number(e.target.value)
+                      }
+                    }
+                  }))
+                }}/>
+              <span>段考:</span>
+              <input type="number" min="0" max="100"
+                onChange={e=>{
+                  setGrades(prev=>({
+                    ...prev,
+                    [studentId]:{
+                      ...prev[studentId],
+                      [sub]:{
+                        ...prev[studentId]?.[sub],
+                        exam: Number(e.target.value)
+                      }
+                    }
+                  }))
+                }}/>
+              <span>總分: {grades[studentId]?.[sub] ? 
+                  Math.round(grades[studentId][sub].daily*0.6 + grades[studentId][sub].exam*0.4) : 0}
+              </span>
+            </div>
           ))}
-        </tbody>
-      </table>
-      <button onClick={handleSave}>儲存成績</button>
+        </div>
+      ))}
+      <button onClick={saveGrades}>儲存成績</button>
     </div>
-  );
+  )
 }
-// src/pages/StudentDashboard.jsx
-import React, { useEffect, useState } from "react";
-import { db } from "../firebase";
-import { doc, onSnapshot } from "firebase/firestore";
 
-export default function StudentDashboard({ studentId }) {
-  const [scores,setScores] = useState({});
+export default TeacherGrades;
+import React, { useEffect, useState } from 'react';
+import { db } from '../firebase';
+import { collection, query, where, getDocs } from "firebase/firestore";
+
+const subjects = [
+  "國語文","本土語文","英語文","數學","歷史","地理","公民",
+  "物理","化學","生物","地球科學","音樂","視覺藝術","表演藝術",
+  "家政","童軍","輔導活動","生活科技","資訊科技","健康教育","體育"
+];
+
+const StudentGrades = ({ studentId }) => {
+  const [grades, setGrades] = useState({});
 
   useEffect(()=>{
-    const unsub = onSnapshot(doc(db,"students",studentId),(docSnap)=>{
-      if(docSnap.exists()) setScores(docSnap.data().scores || {});
-    });
-    return ()=> unsub();
-  },[studentId]);
+    const fetchGrades = async () => {
+      const newGrades = {};
+      for(const sub of subjects){
+        const q = query(collection(db, "grades"), where("__name__", "==", `${studentId}_${sub}`));
+        const snapshot = await getDocs(q);
+        snapshot.forEach(doc=>{
+          newGrades[sub] = doc.data();
+        })
+      }
+      setGrades(newGrades);
+    }
+    fetchGrades();
+  }, [studentId]);
 
   return (
     <div>
       <h2>我的成績</h2>
-      {Object.keys(scores).map(phase=><div key={phase}>
-        <h3>{phase}</h3>
-        {Object.entries(scores[phase]).map(([sub,val])=>
-          <div key={sub}>
-            {sub}: {val.total} ({val.total>=90?"優":val.total>=80?"甲":val.total>=70?"乙":val.total>=60?"丙":"丁"})
-          </div>
-        )}
-      </div>)}
+      {subjects.map(sub => (
+        <div key={sub}>
+          {sub}：
+          {grades[sub] ? 
+            <span style={{color: grades[sub].daily*0.6 + grades[sub].exam*0.4 < 60 ? 'red' : 'black'}}>
+              {Math.round(grades[sub].daily*0.6 + grades[sub].exam*0.4)}
+            </span> 
+            : "尚無成績"}
+        </div>
+      ))}
     </div>
-  );
+  )
 }
 
-// src/pages/StudentFamily.jsx
-import React, { useState, useEffect } from "react";
-import { db } from "../firebase";
-import { doc, setDoc, getDoc } from "firebase/firestore";
-
-export default function StudentFamily({ studentId }){
-  const [family,setFamily] = useState("");
-
-  useEffect(()=>{
-    const fetch = async ()=>{
-      const d = await getDoc(doc(db,"students",studentId));
-      if(d.exists()) setFamily(d.data().familyInfo || "");
-    }
-    fetch();
-  },[studentId]);
-
-  const saveFamily = async ()=>{
-    await setDoc(doc(db,"students",studentId),{familyInfo:family},{merge:true});
-    alert("家庭資料已儲存");
-  }
-
-  return (
-    <div>
-      <textarea value={family} onChange={e=>setFamily(e.target.value)} />
-      <button onClick={saveFamily}>儲存家庭資料</button>
-    </div>
-  );
-}
-// src/pages/StudentDashboard.jsx
-import React, { useEffect, useState } from "react";
-import { db } from "../firebase";
-import { doc, onSnapshot } from "firebase/firestore";
-
-export default function StudentDashboard({ studentId }) {
-  const [scores,setScores] = useState({});
-
-  useEffect(()=>{
-    const unsub = onSnapshot(doc(db,"students",studentId),(docSnap)=>{
-      if(docSnap.exists()) setScores(docSnap.data().scores || {});
-    });
-    return ()=> unsub();
-  },[studentId]);
-
-  return (
-    <div>
-      <h2>我的成績</h2>
-      {Object.keys(scores).map(phase=><div key={phase}>
-        <h3>{phase}</h3>
-        {Object.entries(scores[phase]).map(([sub,val])=>
-          <div key={sub}>
-            {sub}: {val.total} ({val.total>=90?"優":val.total>=80?"甲":val.total>=70?"乙":val.total>=60?"丙":"丁"})
-          </div>
-        )}
-      </div>)}
-    </div>
-  );
-}
-
-// src/pages/StudentFamily.jsx
-import React, { useState, useEffect } from "react";
-import { db } from "../firebase";
-import { doc, setDoc, getDoc } from "firebase/firestore";
-
-export default function StudentFamily({ studentId }){
-  const [family,setFamily] = useState("");
-
-  useEffect(()=>{
-    const fetch = async ()=>{
-      const d = await getDoc(doc(db,"students",studentId));
-      if(d.exists()) setFamily(d.data().familyInfo || "");
-    }
-    fetch();
-  },[studentId]);
-
-  const saveFamily = async ()=>{
-    await setDoc(doc(db,"students",studentId),{familyInfo:family},{merge:true});
-    alert("家庭資料已儲存");
-  }
-
-  return (
-    <div>
-      <textarea value={family} onChange={e=>setFamily(e.target.value)} />
-      <button onClick={saveFamily}>儲存家庭資料</button>
-    </div>
-  );
-}
-// src/pages/PDFUpload.jsx
-import React, { useState } from "react";
-import { uploadPDF } from "../firebase"; // 之前 firebase.js 裡可用 storage
-
-export default function PDFUpload() {
-  const [file,setFile] = useState(null);
-
-  const handleUpload = async ()=>{
-    if(!file) return alert("請選擇檔案");
-    const url = await uploadPDF(file, `pdf/${file.name}`);
-    alert("上傳成功！可下載/查看：" + url);
-  }
-
-  return (
-    <div>
-      <input type="file" accept="application/pdf" onChange={e=>setFile(e.target.files[0])}/>
-      <button onClick={handleUpload}>上傳PDF</button>
-    </div>
-  );
-}
-// src/pages/Discipline.jsx
-import React, { useState } from "react";
-import { db } from "../firebase";
-import { doc, setDoc } from "firebase/firestore";
-
-export default function Discipline() {
-  const [studentId,setStudentId] = useState("");
-  const [type,setType] = useState("嘉獎");
-  const [reason,setReason] = useState("");
-  const [applyDate,setApplyDate] = useState("");
-  const [effectDate,setEffectDate] = useState("");
-  const [cancelDate,setCancelDate] = useState("");
-
-  const saveDiscipline = async () => {
-    if(!studentId || !reason) return alert("請輸入完整資料");
-    const docRef = doc(db,"discipline", `${studentId}_${applyDate}_${type}`);
-    await setDoc(docRef,{
-      studentId,type,reason,applyDate,effectDate,cancelDate
-    });
-    alert("獎懲紀錄已儲存");
-  }
-
-  return (
-    <div>
-      <input placeholder="學號" value={studentId} onChange={e=>setStudentId(e.target.value)} />
-      <select value={type} onChange={e=>setType(e.target.value)}>
-        {["嘉獎","小功","大功","警告","小過","大過"].map(t=><option key={t}>{t}</option>)}
-      </select>
-      <input placeholder="事由" value={reason} onChange={e=>setReason(e.target.value)} />
-      <input type="date" value={applyDate} onChange={e=>setApplyDate(e.target.value)} />
-      <input type="date" value={effectDate} onChange={e=>setEffectDate(e.target.value)} />
-      <input type="date" value={cancelDate} onChange={e=>setCancelDate(e.target.value)} />
-      <button onClick={saveDiscipline}>儲存獎懲</button>
-    </div>
-  );
-}
+export default StudentGrades;
