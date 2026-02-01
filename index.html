@@ -1,200 +1,231 @@
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
-school-system/
-│
-├─ public/
-│   └─ index.html
-├─ src/
-│   ├─ App.js
-│   ├─ index.js
-│   ├─ firebase.js
-│   ├─ components/
-│   │   ├─ Login.js
-│   │   ├─ Dashboard.js
-│   │   ├─ TeacherGrades.js
-│   │   ├─ StudentGrades.js
-│   │   ├─ PDFUpload.js
-│   │   ├─ RewardPunishment.js
-│   │   └─ FamilyInfo.js
-└─ package.json
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+// 37條規定之核心設定
+export const PIN_CODE = "1234";
+export const STUDENT_PWD = "28965789";
+export const TEACHER_ID = "Jason1010907";
+export const TEACHER_PWD = "B124380907";
 
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+export const POPULATION = {
+  7: { year: 114, total: 726, classes: 28 },
+  8: { year: 113, total: 726, classes: 28 },
+  9: { year: 112, total: 622, classes: 28 }
 };
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
-import React, { useState } from 'react';
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from '../firebase';
+export const SUBJECT_MAP = {
+  "語文領域": ["國語文", "本土語文", "英語文"],
+  "數學領域": ["數學"],
+  "社會領域": ["歷史", "地理", "公民"],
+  "自然科學領域": ["物理", "化學", "生物", "地球科學"],
+  "藝術領域": ["音樂", "視覺藝術", "表演藝術"],
+  "綜合活動領域": ["家政", "童軍", "輔導活動"],
+  "科技領域": ["生活科技", "資訊科技"],
+  "健康與體育領域": ["健康教育", "體育"]
+};
 
-const Login = ({ setUser }) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+export const ALL_SUBS = Object.values(SUBJECT_MAP).flat();
+
+// 成績計算規則 (60/40 權重)
+export const calcTotal = (p, e) => Math.round(Number(p) * 0.6 + Number(e) * 0.4);
+export const getRank = (s) => {
+  if (s >= 90) return "優";
+  if (s >= 80) return "甲";
+  if (s >= 70) return "乙";
+  if (s >= 60) return "丙";
+  return "丁";
+};
+import React, { useState, useEffect } from "react";
+import { auth, db } from "./firebase";
+import TeacherPanel from "./components/TeacherPanel";
+import StudentPanel from "./components/StudentPanel";
+import "./App.css";
+
+function App() {
+  const [unlocked, setUnlocked] = useState(false);
   const [pin, setPin] = useState("");
-  const [captcha, setCaptcha] = useState("");
-  const [captchaCode, setCaptchaCode] = useState(Math.floor(1000 + Math.random() * 9000));
+  const [user, setUser] = useState(null); // {role, id, name}
 
-  const handleLogin = async () => {
-    if(pin !== "1234") return alert("PIN 碼錯誤");
-    if(captcha !== captchaCode.toString()) return alert("驗證碼錯誤");
+  // 自動同步時間與學期判定
+  const [sysTime, setSysTime] = useState(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setSysTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      setUser(userCredential.user);
-    } catch(err) {
-      alert(err.message);
-    }
+  const handleUnlock = () => {
+    if (pin === "1234") setUnlocked(true);
+    else alert("PIN 碼錯誤！");
+  };
+
+  if (!unlocked) {
+    return (
+      <div className="gate">
+        <h1>TM-OS V5.12.0</h1>
+        <p>全校 2,074 名學生數據保護中</p>
+        <input type="password" onChange={(e)=>setPin(e.target.value)} placeholder="PIN" />
+        <button onClick={handleUnlock}>解鎖系統</button>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <h2>登入系統</h2>
-      <input placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)}/>
-      <input placeholder="密碼" type="password" value={password} onChange={e=>setPassword(e.target.value)}/>
-      <input placeholder="PIN" value={pin} onChange={e=>setPin(e.target.value)}/>
-      <p>驗證碼：{captchaCode}</p>
-      <input placeholder="輸入驗證碼" value={captcha} onChange={e=>setCaptcha(e.target.value)}/>
-      <button onClick={handleLogin}>登入</button>
+    <div className="app-container">
+      {!user ? (
+        <Login setRole={setUser} />
+      ) : user.role === "teacher" ? (
+        <TeacherPanel user={user} sysTime={sysTime} />
+      ) : (
+        <StudentPanel user={user} sysTime={sysTime} />
+      )}
     </div>
   );
 }
 
-export default Login;
-import React, { useState, useEffect } from 'react';
-import { db } from '../firebase';
-import { collection, doc, setDoc, getDocs } from "firebase/firestore";
+export default App;
+          import React, { useState } from 'react';
+import { db, storage } from '../firebase';
+import { doc, setDoc, collection, getDocs } from "firebase/firestore";
+import { POPULATION, ALL_SUBS, calcTotal, getRank } from '../config';
 
-const subjects = [
-  "國語文","本土語文","英語文","數學","歷史","地理","公民",
-  "物理","化學","生物","地球科學","音樂","視覺藝術","表演藝術",
-  "家政","童軍","輔導活動","生活科技","資訊科技","健康教育","體育"
-];
+const TeacherPanel = ({ sysTime }) => {
+  const [selGrade, setSelGrade] = useState(7);
+  const [selClass, setSelClass] = useState("01");
+  const [selSub, setSelSub] = useState(ALL_SUBS[0]);
+  const [students, setStudents] = useState([]);
 
-const TeacherGrades = ({ selectedClass }) => {
-  const [grades, setGrades] = useState({});
+  // 生成符合 2074 人口邏輯的名單
+  const loadStudents = () => {
+    const config = POPULATION[selGrade];
+    let size = (selGrade === 9) ? (parseInt(selClass) <= 6 ? 23 : 22) : 24;
+    
+    let list = [];
+    for (let i = 1; i <= size; i++) {
+      const sno = i.toString().padStart(2, '0');
+      const sid = (i === 24) 
+        ? `${config.year}-${config.year}${selClass}24` 
+        : `${config.year}-${config.year}${selClass}${sno}`;
+      list.push({ sno, sid, p: "", e: "", t: "-", r: "-" });
+    }
+    setStudents(list);
+  };
 
-  const saveGrades = async () => {
-    for(const studentId in grades){
-      for(const sub of subjects){
-        await setDoc(doc(db, "grades", `${studentId}_${sub}`), {
-          ...grades[studentId][sub],
-          timestamp: new Date()
-        });
+  const updateScore = (idx, field, val) => {
+    const newList = [...students];
+    newList[idx][field] = val;
+    if (newList[idx].p && newList[idx].e) {
+      const total = calcTotal(newList[idx].p, newList[idx].e);
+      newList[idx].t = total;
+      newList[idx].r = getRank(total);
+    }
+    setStudents(newList);
+  };
+
+  const handleSave = async () => {
+    // 跨裝置同步：存入 Firestore
+    for (const s of students) {
+      if (s.t !== "-") {
+        const ref = doc(db, "grades", `114-1-${selSub}`, selGrade.toString(), s.sid);
+        await setDoc(ref, s);
       }
     }
-    alert("成績已儲存並同步到雲端！");
-  }
+    alert("✅ 雲端同步儲存成功！");
+  };
 
   return (
-    <div>
-      <h2>教師成績輸入</h2>
-      {Object.keys(grades).map(studentId => (
-        <div key={studentId}>
-          <h4>{studentId}</h4>
-          {subjects.map(sub => (
-            <div key={sub}>
-              <span>{sub} 平時:</span>
-              <input type="number" min="0" max="100" 
-                onChange={e=>{
-                  setGrades(prev=>({
-                    ...prev,
-                    [studentId]:{
-                      ...prev[studentId],
-                      [sub]:{
-                        ...prev[studentId]?.[sub],
-                        daily: Number(e.target.value)
-                      }
-                    }
-                  }))
-                }}/>
-              <span>段考:</span>
-              <input type="number" min="0" max="100"
-                onChange={e=>{
-                  setGrades(prev=>({
-                    ...prev,
-                    [studentId]:{
-                      ...prev[studentId],
-                      [sub]:{
-                        ...prev[studentId]?.[sub],
-                        exam: Number(e.target.value)
-                      }
-                    }
-                  }))
-                }}/>
-              <span>總分: {grades[studentId]?.[sub] ? 
-                  Math.round(grades[studentId][sub].daily*0.6 + grades[studentId][sub].exam*0.4) : 0}
-              </span>
-            </div>
+    <div className="panel">
+      <h2>✍️ 成績錄取中心 (22科目)</h2>
+      <div className="toolbar">
+        <select onChange={(e)=>setSelGrade(Number(e.target.value))}>
+          {[7,8,9].map(g => <option key={g} value={g}>{g}年級</option>)}
+        </select>
+        <select onChange={(e)=>setSelClass(e.target.value)}>
+          {[...Array(28)].map((_,i) => {
+            const c = (i+1).toString().padStart(2,'0');
+            return <option key={c} value={c}>{c}班</option>
+          })}
+        </select>
+        <select onChange={(e)=>setSelSub(e.target.value)}>
+          {ALL_SUBS.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <button className="btn-feedback" onClick={loadStudents}>載入名單</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>座號</th><th>學號 (24號鎖定)</th><th>平時(60%)</th><th>段考(40%)</th><th>總分</th><th>等第</th></tr>
+        </thead>
+        <tbody>
+          {students.map((s, idx) => (
+            <tr key={s.sid}>
+              <td>{s.sno}</td>
+              <td>{s.sid}</td>
+              <td><input type="number" onChange={(e)=>updateScore(idx, 'p', e.target.value)} /></td>
+              <td><input type="number" onChange={(e)=>updateScore(idx, 'e', e.target.value)} /></td>
+              <td className={s.t < 60 ? "fail-red" : ""}>{s.t}</td>
+              <td>{s.r}</td>
+            </tr>
           ))}
-        </div>
-      ))}
-      <button onClick={saveGrades}>儲存成績</button>
+        </tbody>
+      </table>
+      <button className="btn-save btn-feedback" onClick={handleSave}>💾 儲存並同步雲端</button>
     </div>
-  )
-}
+  );
+};
 
-export default TeacherGrades;
-import React, { useEffect, useState } from 'react';
-import { db } from '../firebase';
-import { collection, query, where, getDocs } from "firebase/firestore";
+export default TeacherPanel;
+      // 獎懲系統 (核心 8 欄位)
+const RewardSystem = () => {
+  const [data, setData] = useState({
+    sid: "", type: "嘉獎", reason: "", base: "",
+    dateEvt: "", dateApp: "", dateEff: "", dateClr: ""
+  });
 
-const subjects = [
-  "國語文","本土語文","英語文","數學","歷史","地理","公民",
-  "物理","化學","生物","地球科學","音樂","視覺藝術","表演藝術",
-  "家政","童軍","輔導活動","生活科技","資訊科技","健康教育","體育"
-];
-
-const StudentGrades = ({ studentId }) => {
-  const [grades, setGrades] = useState({});
-
-  useEffect(()=>{
-    const fetchGrades = async () => {
-      const newGrades = {};
-      for(const sub of subjects){
-        const q = query(collection(db, "grades"), where("__name__", "==", `${studentId}_${sub}`));
-        const snapshot = await getDocs(q);
-        snapshot.forEach(doc=>{
-          newGrades[sub] = doc.data();
-        })
-      }
-      setGrades(newGrades);
-    }
-    fetchGrades();
-  }, [studentId]);
+  const saveRP = async () => {
+    await setDoc(doc(db, "rewards", data.sid + Date.now()), data);
+    alert("⚖️ 獎懲紀錄已同步至學生帳戶");
+  };
 
   return (
-    <div>
-      <h2>我的成績</h2>
-      {subjects.map(sub => (
-        <div key={sub}>
-          {sub}：
-          {grades[sub] ? 
-            <span style={{color: grades[sub].daily*0.6 + grades[sub].exam*0.4 < 60 ? 'red' : 'black'}}>
-              {Math.round(grades[sub].daily*0.6 + grades[sub].exam*0.4)}
-            </span> 
-            : "尚無成績"}
-        </div>
-      ))}
+    <div className="card">
+      <input placeholder="學生學號" onChange={e => setData({...data, sid: e.target.value})} />
+      <select onChange={e => setData({...data, type: e.target.value})}>
+        <option>嘉獎</option><option>小功</option><option>大功</option>
+        <option>警告</option><option>小過</option><option>大過</option>
+      </select>
+      <input type="date" title="生效日期" onChange={e => setData({...data, dateEff: e.target.value})} />
+      {/* 其他 5 個日期與文字欄位... */}
+      <button className="btn-feedback" onClick={saveRP}>儲存獎懲</button>
     </div>
-  )
+  );
+};
+      /* 按鈕物理縮放反饋 */
+.btn-feedback {
+  transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+  border-radius: 4px;
+  background: #0078d4;
+  color: white;
+  border: none;
+  padding: 10px 20px;
 }
 
-export default StudentGrades;
+.btn-feedback:active {
+  transform: scale(0.92); /* 點擊時縮小 8% */
+  filter: brightness(0.9);
+}
+
+/* 37條規定：59分以下自動紅字 */
+.fail-red {
+  color: #ff0000 !important;
+  font-weight: bold;
+}
+
+/* 雙層門禁樣式 */
+.gate {
+  background: linear-gradient(135deg, #002d55, #001529);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+}
+      
