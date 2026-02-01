@@ -1,45 +1,136 @@
-// Firebase 初始化與 37 條規定核心邏輯
-import { initializeApp } from "firebase/app";
-import { getFirestore, doc, setDoc, onSnapshot } from "firebase/firestore";
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>校務系統 V5.12.0 - 無毒加固版</title>
+    <style>
+        :root { --primary-color: #2c3e50; --danger-color: #e74c3c; }
+        body { font-family: sans-serif; transition: all 0.3s; }
+        
+        /* 按鈕物理反應：點擊縮放動畫 */
+        .btn-active:active { transform: scale(0.92); }
+        .btn-active { transition: transform 0.1s; cursor: pointer; }
 
-const firebaseConfig = { /* 您的 Firebase 配置 */ };
-const db = getFirestore(initializeApp(firebaseConfig));
+        /* 不及格紅字樣式 */
+        .score-failed { color: var(--danger-color); font-weight: bold; }
+        
+        /* UI 區隔 */
+        #teacher-ui, #student-ui, #login-gate { display: none; }
+        .sidebar { width: 200px; float: left; border-right: 1px solid #ccc; height: 100vh; }
+    </style>
+</head>
+<body>
 
-// 1. 自動換學期邏輯 (8/1 與 2/1)
-const getCurrentSemester = () => {
-    const now = new Date();
-    const month = now.getMonth() + 1;
-    return (month >= 8 || month === 1) ? "第一學期" : "第二學期";
-};
+<div id="pin-screen">
+    <h2>請輸入 4 位 PIN 碼 (1234)</h2>
+    <input type="password" id="sys-pin" maxlength="4">
+    <button onclick="checkPin()" class="btn-active">進入系統</button>
+</div>
 
-// 2. 22 個子科目權限清單
-const subjects = [
-    "國語文", "本土語文", "英語文", "數學", "歷史", "地理", "公民",
-    "物理", "化學", "生物", "地科", "音樂", "視覺藝術", "表演藝術",
-    "家政", "童軍", "輔導", "生活科技", "資訊科技", "健康", "體育"
-];
+<div id="main-nav" style="display:none;">
+    <div class="sidebar">
+        <button onclick="viewCalendar()" class="btn-active">📅 行事曆 (PDF)</button>
+        <hr>
+        <button onclick="showLogin('teacher')" class="btn-active">教師登入</button>
+        <button onclick="showLogin('student')" class="btn-active">學生登入</button>
+    </div>
 
-// 3. 儲存按鈕物理反應 (CSS Animation)
-const buttonPress = (e) => {
-    e.target.style.transform = "scale(0.9)";
-    setTimeout(() => e.target.style.transform = "scale(1)", 100);
-};
+    <div id="login-gate">
+        <h2 id="login-title"></h2>
+        <input type="text" id="acc" placeholder="帳號"><br>
+        <input type="password" id="pwd" placeholder="密碼"><br>
+        <div id="captcha-area">驗證碼: <span id="captcha-code"></span> 
+            <input type="text" id="captcha-input" placeholder="請輸入4位數">
+        </div>
+        <button onclick="handleLogin()" class="btn-active">確認登入</button>
+    </div>
 
-// 4. 成績儲存與即時同步
-async function saveGrade(studentId, subject, dailyScore, examScore) {
-    const total = (dailyScore * 0.6) + (examScore * 0.4);
-    const gradeData = {
-        [`${subject}_階段`]: {
-            score: total,
-            isFailed: total < 60,
-            timestamp: new Date().toISOString()
+    <div id="teacher-ui">
+        <h3>教師管理後台 - 114學年度第一學期</h3>
+        <select id="grade-sel"><option>7年級</option><option>8年級</option><option>9年級</option></select>
+        <select id="class-sel" onchange="loadClassList()"></select> <select id="subject-sel">
+            <optgroup label="語文">
+                <option>國語文</option><option>本土語文</option><option>英語文</option>
+            </optgroup>
+            <optgroup label="自然">
+                <option>生物</option><option>物理</option><option>化學</option><option>地科</option>
+            </optgroup>
+            </select>
+        <hr>
+        <div id="grade-input-area">
+            </div>
+        <button onclick="saveAllToFirebase()" class="btn-active">💾 儲存並同步雲端</button>
+        <button onclick="uploadSchedule()" class="btn-active">📤 上傳 PDF 課表</button>
+    </div>
+
+    <div id="student-ui">
+        <nav>
+            <button onclick="showPage('p1')">階段成績</button>
+            <button onclick="showPage('p2')">學習成績</button>
+            <button onclick="showPage('p3')">獎懲紀錄卡</button>
+            <button onclick="showPage('p4')">家庭狀況填報</button>
+        </nav>
+        <div id="p1"> </div>
+    </div>
+</div>
+
+<script type="module">
+    // Firebase 核心邏輯 (規定 6, 24, 34)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9/firebase-app.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9/firebase-firestore.js";
+
+    const firebaseConfig = { /* 此處填入你的 Firebase 密鑰 */ };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // 規定 12-14: 學號自動生成與 24 號特殊格式
+    function generateStudentId(year, classNum, seat) {
+        let seatStr = seat < 10 ? "0" + seat : seat;
+        if (seat === 24) {
+            return `${year}-${year + classNum + 24}`; // 24號專用格式
         }
-    };
-    await setDoc(doc(db, "grades", studentId), gradeData, { merge: true });
-    console.log("雲端同步完成，跨裝置資料已更新。");
-}
+        return `${year}-${year + classNum + seatStr}`; // 一般格式
+    }
 
-// 5. 9 年級自動清除 (每年 8/1 執行)
-if (new Date().getMonth() + 1 === 8 && new Date().getDate() === 1) {
-    // 執行 622 名 9 年級學生帳號刪除指令...
-}
+    // 規定 16-17: 成績權重計算
+    function calculateFinal(daily, exam) {
+        let total = (daily * 0.6) + (exam * 0.4);
+        let level = total >= 90 ? "優" : total >= 80 ? "甲" : total >= 70 ? "乙" : total >= 60 ? "丙" : "丁";
+        return { total, level, class: total < 60 ? "score-failed" : "" };
+    }
+
+    // 規定 26-32: 獎懲八大欄位
+    async function saveDiscipline(sid, data) {
+        // data 需包含：事件發生, 申請日期, 生效時間, 事由, 類別, 次數, 依據, 銷過日期
+        await setDoc(doc(db, "discipline", sid), data, { merge: true });
+        alert("獎懲已同步至學生個人紀錄卡！");
+    }
+
+    // 自動換學期邏輯 (規定 20)
+    function autoSemester() {
+        const now = new Date();
+        const month = now.getMonth() + 1;
+        // 8/1換第一學期, 2/1換第二學期
+        return (month >= 8 || month === 1) ? "第一學期" : "第二學期";
+    }
+</script>
+
+<script>
+    // 基礎 UI 控制邏輯
+    function checkPin() {
+        if(document.getElementById('sys-pin').value === "1234") {
+            document.getElementById('pin-screen').style.display = 'none';
+            document.getElementById('main-nav').style.display = 'block';
+        }
+    }
+    
+    // 初始化 1~28 班
+    const classSel = document.getElementById('class-sel');
+    for(let i=1; i<=28; i++) {
+        let opt = document.createElement('option');
+        opt.value = i; opt.text = i + " 班";
+        classSel.add(opt);
+    }
+</script>
+</body>
+</html>
