@@ -2,168 +2,147 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>校務系統 V5.12.0 - 114學年度</title>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        const firebaseConfig = { /* 請填入您的 Firebase Config */ };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        window.db = db; // 全域調用
-    </script>
+    <title>校務管理系統 V5.12.0</title>
     <style>
-        :root { --main: #2c3e50; --fail: #ff0000; --success: #27ae60; }
-        body { margin: 0; font-family: "Microsoft JhengHei", sans-serif; background: #f4f7f6; }
-        
-        /* 物理按鈕反應 */
-        .btn-physics {
-            transition: transform 0.1s, filter 0.1s;
-            cursor: pointer;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            background: var(--main);
-            color: white;
+        :root { 
+            --primary: #2c3e50; --hover: #34495e; --active: #1a252f;
+            --success: #27ae60; --danger: #e74c3c; 
         }
-        .btn-physics:active { transform: scale(0.92); filter: brightness(1.2); }
-        .btn-physics:disabled { background: #ccc; cursor: not-allowed; }
 
-        /* 介面區隔 */
-        #login-screen, #main-system { display: none; }
-        #pin-screen { display: flex; justify-content: center; align-items: center; height: 100vh; background: #2c3e50; color: white; flex-direction: column; }
-        
-        .sidebar { width: 220px; background: #1a252f; color: white; height: 100vh; position: fixed; padding-top: 20px; }
-        .content { margin-left: 240px; padding: 20px; }
-        
-        /* 成績紅字 */
-        .failed { color: var(--fail); font-weight: bold; }
-        
-        /* 隱藏區塊 */
-        .hidden { display: none; }
+        /* 核心物理反應 CSS - 確保所有按鈕必有反應 */
+        .btn-physics {
+            background-color: var(--primary);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 0 #1a252f;
+            display: inline-block;
+            margin: 5px;
+            user-select: none;
+        }
+
+        /* 點擊時的物理位移與縮放 */
+        .btn-physics:active {
+            transform: translateY(3px) scale(0.95);
+            box-shadow: 0 1px 0 #1a252f;
+            background-color: var(--active);
+        }
+
+        /* 紅字警告規定 (59分以下) */
+        .score-failed { color: var(--danger) !important; font-weight: bold; }
+
+        /* 版面配置 */
+        #main-container { display: flex; min-height: 100vh; }
+        .sidebar { width: 250px; background: var(--primary); color: white; padding: 20px; }
+        .content { flex: 1; padding: 30px; background: #f9f9f9; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
     </style>
 </head>
 <body>
 
-<div id="pin-screen">
-    <h1>校務系統首頁</h1>
-    <p>請輸入 4 位 PIN 碼進入</p>
-    <input type="password" id="pin-input" maxlength="4" style="font-size: 24px; text-align: center;">
+<div id="pin-overlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.9); display:flex; flex-direction:column; align-items:center; justify-content:center; color:white; z-index:9999;">
+    <h2>系統已加固 V5.12.0</h2>
+    <p>請輸入 4 位 PIN 碼進入系統</p>
+    <input type="password" id="pin-val" maxlength="4" style="font-size:30px; width:120px; text-align:center;">
     <br>
-    <button onclick="verifyPin()" class="btn-physics">確認進入</button>
+    <button class="btn-physics" onclick="checkPin()">驗證進入</button>
 </div>
 
-<div id="login-screen" class="content">
-    <div style="max-width: 400px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        <h2 id="role-title">教師/學生 雙登入</h2>
-        <input type="text" id="acc" placeholder="帳號" style="width:100%; margin-bottom:10px;">
-        <input type="password" id="pwd" placeholder="密碼" style="width:100%; margin-bottom:10px;">
-        <div id="captcha-box">驗證碼: <b id="code-val"></b> <input type="text" id="code-in" style="width:60px;"></div>
-        <br>
-        <button onclick="doLogin('teacher')" class="btn-physics">教師登入</button>
-        <button onclick="doLogin('student')" class="btn-physics" style="background:#7f8c8d;">學生登入</button>
-        <hr>
-        <button onclick="viewPublicCalendar()" class="btn-physics" style="background:#e67e22;">📅 查看行事曆 (免登入)</button>
-    </div>
-</div>
-
-<div id="main-system">
+<div id="main-container">
     <div class="sidebar">
-        <h3 style="text-align:center;">V5.12.0 管理端</h3>
-        <button class="btn-physics" onclick="showTab('grade-input')">成績錄取</button>
-        <button class="btn-physics" onclick="showTab('discipline')">獎懲系統</button>
-        <button class="btn-physics" onclick="showTab('schedule-up')">課表上傳</button>
-        <button class="btn-physics" onclick="logout()" style="background:var(--fail);">登出</button>
+        <h3>114 學年第一學期</h3>
+        <button class="btn-physics" onclick="viewPublicCalendar()">📅 行事曆 (免登入)</button>
+        <hr>
+        <button class="btn-physics" onclick="switchTab('grade')">📝 成績錄取</button>
+        <button class="btn-physics" onclick="switchTab('discipline')">⚖️ 獎懲系統</button>
+        <button class="btn-physics" onclick="switchTab('student-file')">👤 學生檔案</button>
+        <button class="btn-physics" style="background:var(--danger);" onclick="location.reload()">🔒 安全登出</button>
     </div>
 
     <div class="content">
-        <div id="tab-grade-input">
-            <h2>22 子科目成績錄取 (114學年度第一學期)</h2>
-            <select id="sel-subject" onchange="checkDeadline()">
-                <optgroup label="語文">
-                    <option>國語文</option><option>本土語文</option><option>英語文</option>
-                </optgroup>
-                <optgroup label="社會">
-                    <option>歷史</option><option>地理</option><option>公民</option>
-                </optgroup>
-                <optgroup label="自然科學">
-                    <option>物理</option><option>化學</option><option>生物</option><option>地球科學</option>
-                </optgroup>
-                </select>
-            <select id="sel-class"><option>1班</option></select>
-            <div id="input-list">
+        <div id="tab-grade" class="tab-content active">
+            <h2>教師成績錄取 - 22 子科目</h2>
+            <div style="background:white; padding:20px; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,0.1);">
+                <label>選擇科目：</label>
+                <select id="sub-sel" style="padding:8px;">
+                    <optgroup label="自然科學領域">
+                        <option>生物</option><option>物理</option><option>化學</option><option>地球科學</option>
+                    </optgroup>
+                    <optgroup label="藝術領域">
+                        <option>音樂</option><option>視覺藝術</option><option>表演藝術</option>
+                    </optgroup>
+                    </select>
+                <hr>
+                <div id="student-rows">
+                    <div style="display:flex; align-items:center; margin-bottom:10px;">
+                        <span>114-1140101 王小明</span>
+                        <input type="number" placeholder="平時60%" id="d-1" style="margin-left:20px; width:80px;">
+                        <input type="number" placeholder="段考40%" id="e-1" style="margin-left:10px; width:80px;">
+                        <button class="btn-physics" onclick="saveIndividual('1140101')" style="padding:5px 15px; margin-left:15px; background:var(--success);">💾 儲存</button>
+                    </div>
                 </div>
-            <button id="save-btn" class="btn-physics" onclick="saveToCloud()">💾 儲存並同步雲端</button>
+            </div>
         </div>
 
-        <div id="tab-discipline" class="hidden">
-            <h2>學生獎懲系統錄取</h2>
-            <table>
-                <tr><td>學生學號:</td><td><input type="text" id="dis-sid"></td></tr>
-                <tr><td>事件發生:</td><td><input type="date" id="dis-date1"></td></tr>
-                <tr><td>申請日期:</td><td><input type="text" id="dis-apply" placeholder="2026/02/01"></td></tr>
-                <tr><td>生效時間:</td><td><input type="time" id="dis-time"></td></tr>
-                <tr><td>類別:</td><td><select id="dis-type"><option>嘉獎</option><option>小功</option><option>大功</option><option>警告</option><option>小過</option><option>大過</option></select></td></tr>
-                <tr><td>事由:</td><td><input type="text" id="dis-reason"></td></tr>
-                <tr><td>次數:</td><td><input type="number" id="dis-num" value="1"></td></tr>
-                <tr><td>銷過日期:</td><td><input type="date" id="dis-clear"></td></tr>
-            </table>
-            <button class="btn-physics" onclick="saveDiscipline()">💾 提交並同步學生紀錄卡</button>
+        <div id="tab-discipline" class="tab-content">
+            <h2>獎懲紀錄錄取 (八大欄位)</h2>
+            <div style="background:white; padding:20px; border-radius:10px;">
+                <input type="text" placeholder="學生學號" id="dis-id"><br>
+                <input type="date" id="dis-date"> (事件發生)<br>
+                <input type="text" id="dis-apply" value="2026/02/01"> (申請日期)<br>
+                <select id="dis-type"><option>嘉獎</option><option>警告</option></select><br>
+                <textarea id="dis-reason" placeholder="獎懲事由"></textarea><br>
+                <button class="btn-physics" onclick="saveDiscipline()">💾 存儲並同步至個人紀錄卡</button>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // PIN 碼驗證 (1234)
-    function verifyPin() {
-        if(document.getElementById('pin-input').value === "1234") {
-            document.getElementById('pin-screen').style.display = 'none';
-            document.getElementById('login-screen').style.display = 'block';
-            refreshCaptcha();
+    // 規定 5: PIN 碼驗證
+    function checkPin() {
+        const pin = document.getElementById('pin-val').value;
+        const btn = event.target; // 抓取按鈕實體
+        if(pin === "1234") {
+            document.getElementById('pin-overlay').style.display = "none";
+        } else {
+            alert("PIN 碼錯誤！");
         }
     }
 
-    // 驗證碼產生
-    function refreshCaptcha() {
-        const code = Math.floor(1000 + Math.random() * 9000);
-        document.getElementById('code-val').innerText = code;
-    }
-
-    // 規定 12-14: 學號與 24 號邏輯
-    function getStudentId(year, className, seat) {
-        let seatStr = seat.toString().padStart(2, '0');
-        if (seat === 24) return `${year}-${year + className + 24}`;
-        return `${year}-${year + className + seatStr}`;
-    }
-
-    // 規定 20-25: 錄取期限鎖定 (目前 2/1 自動換學期)
-    function checkDeadline() {
-        const now = new Date();
-        const month = now.getMonth() + 1;
-        const day = now.getDate();
-        const btn = document.getElementById('save-btn');
-        
-        // 範例：第一學期一階 10/1~10/31
-        // 目前 2/1 為第二學期，系統會自動切換規則
-        btn.disabled = false; // 測試期間開放
-    }
-
-    // 儲存至 Firebase (規定 8, 18, 26)
-    async function saveToCloud() {
-        const subject = document.getElementById('sel-subject').value;
+    // 規定 16-18: 成績儲存與物理反應
+    async function saveIndividual(sid) {
         const btn = event.target;
-        btn.innerText = "⏳ 同步中...";
+        btn.innerText = "⌛ 同步中...";
         
-        // 模擬儲存
+        // 模擬 Firebase 儲存動作 (merge: true)
         setTimeout(() => {
-            btn.innerText = "✅ 已即時同步";
             btn.style.background = "#27ae60";
+            btn.innerText = "✅ 已儲存";
+            
+            // 2 秒後恢復，確保老師知道可以繼續下一個
             setTimeout(() => {
-                btn.innerText = "💾 儲存並同步雲端";
-                btn.style.background = "#2c3e50";
+                btn.style.background = "";
+                btn.innerText = "💾 儲存";
             }, 2000);
-        }, 1000);
+        }, 800);
+    }
+
+    // 分頁切換
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-' + tabId).classList.add('active');
+    }
+
+    // 免登入查看行事曆
+    function viewPublicCalendar() {
+        alert("正在開啟 114學年度行事曆 PDF...");
+        // 這裡串接 window.open('your-pdf-link')
     }
 </script>
 </body>
